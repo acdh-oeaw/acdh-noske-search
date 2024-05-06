@@ -1,0 +1,51 @@
+{
+  "name": "acdh-noske-search",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "entry": [
+    "index.ts"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "vite",
+    "build-vite": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.43.0",
+    "memfs": "^4.9.2",
+    "node-fetch": "^3.3.2",
+    "tailwindcss": "^3.4.3",
+    "tsup": "^8.0.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-plugin-node-polyfills": "^0.21.0"
+  },
+  "keywords": [
+    "Digital Edition",
+    "TypeScript",
+    "Search Interface",
+    "Digital Humanities"
+  ],
+  "description": "Search Interface for Noske",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acdh-oeaw/acdh-noske-search.git"
+  },
+  "author": "Daniel Elsner",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/acdh-oeaw/acdh-noske-search/issues"
+  },
+  "homepage": "https://github.com/acdh-oeaw/acdh-noske-search#readme"
+}
