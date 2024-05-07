@@ -1,7 +1,6 @@
 import { CorpusSearchService } from "./client/services.gen.ts";
 import { OpenAPI } from "./client/core/OpenAPI.ts";
 import { _concordance } from "./client/types.gen.ts";
-import { GetConcordanceData } from "./client/types.gen.ts";
 
 type Lines = {
 	left: string;
@@ -65,8 +64,21 @@ export async function getCorpus(query: string, options: Options) {
 		refs: options.refs,
 		pagesize: options.pagesize,
 		fromp: options.fromp,
-
 	});
+	const urlparam = new URLSearchParams(window.location.search);
+	urlparam.set("corpname", options.corpname);
+	urlparam.set("q", handledQuery);
+	urlparam.set("viewmode", options.viewmode!);
+	urlparam.set("attrs", options.attrs);
+	urlparam.set("format", options.format!);
+	urlparam.set("structs", options.structs);
+	urlparam.set("kwicrightctx", options.kwicrightctx);
+	urlparam.set("kwicleftctx", options.kwicleftctx);
+	urlparam.set("refs", options.refs);
+	urlparam.set("pagesize", options.pagesize.toString());
+	urlparam.set("fromp", options.fromp.toString());
+	urlparam.set("selectQueryValue", queryTypeValue!);
+	window.history.pushState({}, "", `${window.location.pathname}?${urlparam}`);
 	if (response.Lines && response.Lines!.length === 0) {
 		return "No results found";
 		// @ts-ignore
@@ -74,7 +86,6 @@ export async function getCorpus(query: string, options: Options) {
 		// @ts-ignore
 		response.error = `${response.error} see documentation at <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">https://www.sketchengine.eu/documentation/corpus-querying/</a>`;
 	}
-	console.log(response);
 	return response;
 }
 

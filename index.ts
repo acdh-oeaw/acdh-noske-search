@@ -141,7 +141,7 @@ export class NoskeSearch {
         refs: this.refs,
         pagesize: this.pagesize,
         fromp: this.fromp,
-        selectQueryId: this.selectQueryId,
+        selectQueryId: this.selectQueryId
       });
       await this.transformResponse(line);
       // @ts-ignore
@@ -150,9 +150,14 @@ export class NoskeSearch {
     paginationEvent!.value = currentPage.toString();
   }
 
+  normalizeQuery(query: string) {
+    return query.replace('q"', '').replace(/"/g, "").trim();
+  }
+
   search() {
     if (this.base === undefined || this.base === "") throw new Error("Base URL is not defined");
     OpenAPI.BASE = this.base;
+    const queryType = document.querySelector<HTMLSelectElement>(`#${this.selectQueryId}`);
     const input = document.querySelector<HTMLInputElement>(`input#${this.searchInputId}`);
     input!.addEventListener("keyup", async (e) => {
       if (e.key !== "Enter") return;
@@ -171,7 +176,7 @@ export class NoskeSearch {
           refs: this.refs,
           pagesize: this.pagesize,
           fromp: this.fromp,
-          selectQueryId: this.selectQueryId,
+          selectQueryId: this.selectQueryId
         });
         await this.transformResponse(line);
         await this.createPagination();
@@ -193,12 +198,40 @@ export class NoskeSearch {
           refs: this.refs,
           pagesize: this.pagesize,
           fromp: this.fromp,
-          selectQueryId: this.selectQueryId,
+          selectQueryId: this.selectQueryId
         });
         await this.transformResponse(line);
         await this.createPagination();
       }
     });
+    (async() => { 
+      const url = new URL(window.location.href);
+      const oldQuery = url.searchParams.get("q");
+      if (oldQuery) {
+        queryType!.value = url.searchParams.get("selectQueryValue")!;
+        const input = document.querySelector<HTMLInputElement>(`input#${this.searchInputId}`);
+        const query = url.searchParams.get("selectQueryValue")! === "word" ? this.normalizeQuery(oldQuery)
+          : url.searchParams.get("selectQueryValue")! === "phrase" ? this.normalizeQuery(oldQuery)
+          : oldQuery.replace('q', '');
+        input!.value = query;
+        const line = await getCorpus(query, {
+          base: this.base,
+          corpname: url.searchParams.get("corpname")!,
+          viewmode: url.searchParams.get("viewmode") as "kwic" | "sen",
+          attrs: url.searchParams.get("attrs")!,
+          format: url.searchParams.get("format") as "json" | "xml" | "csv" | "tsv" | "txt" | "xls",
+          structs: url.searchParams.get("structs")!,
+          kwicrightctx: url.searchParams.get("kwicrightctx")!,
+          kwicleftctx: url.searchParams.get("kwicleftctx")!,
+          refs: url.searchParams.get("refs")!,
+          pagesize: parseInt(url.searchParams.get("pagesize")!),
+          fromp: parseInt(url.searchParams.get("fromp")!),
+          selectQueryId: this.selectQueryId,
+        });
+        await this.transformResponse(line);
+        await this.createPagination();
+      }
+    })();
   }
 
   async transformResponse(line: any) {
@@ -230,6 +263,7 @@ export class NoskeSearch {
         hits!.innerHTML = "";
         const pagination = document.querySelector<HTMLDivElement>(`#${this.paginationId}`);
         pagination!.innerHTML = "";
+        window.history.pushState({}, "", `${window.location.pathname}`);
       }
     });
   }

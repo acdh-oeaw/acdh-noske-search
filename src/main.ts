@@ -13,7 +13,7 @@ const search = new NoskeSearch({
   refs: "doc.id,p.id,head.id,imprimatur.id,list.id",
   pagesize: 20,
   fromp: 1,
-  results: "Suche nach Wörtern, Phrase oder CQL-Query (Regex erlaubt)",
+  inputPlaceholder: "Suche nach Wörter, Phrase oder CQL-Query (Regex erlaubt)",
   customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition"
 });
 
