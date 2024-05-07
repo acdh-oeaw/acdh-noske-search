@@ -85,7 +85,7 @@ export function getLines(response: _concordance) {
 		let left: string = value.Left?.map((word) => word.str).join(" ")!;
 		let right: string = value.Right?.map((word) => word.str).join(" ")!;
 		let kwic: string = value.Kwic?.map((word) => word.str).join(" ")!;
-		let refs: Array<string> = value.Refs?.map((ref) => ref.split("=")[1])!;
+		let refs: Array<string> = value.Refs?.map((ref) => ref)!;
 		let line: Lines = {"left": left, "right": right, "kwic": kwic, "refs": refs};
 		lines.push(line);
 	});
@@ -97,17 +97,38 @@ export function getStats(response: _concordance) {
 	return stats;
 }
 
-export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number) {
+function checkRefs(refs: Array<string>, refOrDoc: boolean = false) {
+	if (refOrDoc) {
+		for (let ref of refs) {
+			if (ref.startsWith("doc")) {
+				return ref.split("=")[1];
+			}
+		}
+	} else {
+		for (let ref of refs.slice(1)) {
+			if (ref === "" || ref === undefined || ref === null) {
+				return "";
+			} else {
+				return `#${ref.split("=")[1]}`;
+			}
+		}
+	}
+}
+
+export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number, customUrl: string) {
 	const hits = document.querySelector<HTMLDivElement>(`#${containerId}`);
 	hits!.innerHTML = lines.map((line) => {
 		let left = line.left;
 		let right = line.right;
 		let kwic = line.kwic;
 		let refs = line.refs;
+		let docId = checkRefs(refs, true);
+		let hashId = checkRefs(refs, false);
+		let customUrlNormalized = customUrl.endsWith("/") ? customUrl : customUrl + "/";
 		return (
 			`<div class="flex flex-row">
 				<div class="p-2 border basis-11/12">
-					<a href=${refs[0]}?mark=${kwic}#${refs[1]}>
+					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${hashId}">
 						<span class="text-sm text-gray-500">${left}</span>
 						<span class="text-lg text-red-500">${kwic}</span>
 						<span class="text-sm text-gray-500">${right}</span>

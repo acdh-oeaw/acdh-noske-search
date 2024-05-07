@@ -29,6 +29,7 @@ type Options = {
   div3css?: string;
   selectQueryId?: string;
   selectQueryCss?: string;
+  customUrl?: string;
 };
 
 export class NoskeSearch {
@@ -60,6 +61,7 @@ export class NoskeSearch {
   paginationcss: string;
   selectQueryId: string;
   selectQueryCss: string;
+  customUrl: string;
 
   constructor(options: Options) {
     this.base = options.base;
@@ -90,6 +92,7 @@ export class NoskeSearch {
     this.div3css = options.div3css || "text-center p-2";
     this.selectQueryId = options.selectQueryId || "select-query";
     this.selectQueryCss = options.selectQueryCss || "basis-2/12 p-2";
+    this.customUrl = options.customUrl || "";
     (() => this.createHTMLSearchInput())();
     (() => this.clearResults())();
   }
@@ -213,7 +216,7 @@ export class NoskeSearch {
       pagination!.innerHTML = `<select id="${this.selectId}" class="${this.selectcss}">
        ${Array.from({ length: pages }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
        </select>`;
-      responseToHTML(lines, this.hitsId, stats!);
+      responseToHTML(lines, this.hitsId, stats!, this.customUrl);
     }
   }
 
