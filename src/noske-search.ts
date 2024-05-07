@@ -1,6 +1,7 @@
 import { CorpusSearchService } from "./client/services.gen.ts";
 import { OpenAPI } from "./client/core/OpenAPI.ts";
 import { _concordance } from "./client/types.gen.ts";
+import { GetConcordanceData } from "./client/types.gen.ts";
 
 type Lines = {
 	left: string;
@@ -10,6 +11,7 @@ type Lines = {
 };
 
 type Options = {
+	base: string;
 	corpname: string;
 	viewmode: "kwic" | "sen" | undefined;
 	attrs: string;
@@ -20,6 +22,7 @@ type Options = {
 	refs: string;
 	pagesize: number;
 	fromp: number;
+	selectQueryId?: string;
 };
 
 OpenAPI.interceptors.response.use((response) => {
@@ -37,22 +40,22 @@ export function normalizeID(id: string, patterns: Array<string>) {
 	return normalizedID;
 }
 
-export async function getCorpus(query: string, options: Options = {
-	corpname: "diarium",
-	viewmode: "kwic",
-	attrs: "word",
-	format: "json",
-	structs: "doc,head,p,imprimatur",
-	kwicrightctx: "100#",
-	kwicleftctx: "100#",
-	refs: "doc.id,p.id,head.id,imprimatur.id",
-	pagesize: 20,
-	fromp: 1,
+function wrapQuery(query: string) {
+	let queryList = query.split(" ");
+	let q = 'q';
+	for (let i = 0; i < queryList.length; i++) {
+		q += '"' + queryList[i] + '"' + " ";
+	}
+	return q;
+}
 
-}) {
+export async function getCorpus(query: string, options: Options) {
+	const queryType = document.querySelector<HTMLSelectElement>(`#${options.selectQueryId}`);
+	const queryTypeValue = queryType!.value;
+	var handledQuery = queryTypeValue === "word" ? `q"${query}"` : queryTypeValue === "phrase" ? wrapQuery(query) : `q${query}`;
 	const response = await CorpusSearchService.getConcordance({
 		corpname: options.corpname,
-		q: `q[word="${query}"]`,
+		q: handledQuery,
 		viewmode: options.viewmode,
 		attrs: options.attrs,
 		format: options.format,
@@ -64,10 +67,14 @@ export async function getCorpus(query: string, options: Options = {
 		fromp: options.fromp,
 
 	});
-	console.log(response);
-	if (response.Lines!.length === 0) {
+	if (response.Lines && response.Lines!.length === 0) {
 		return "No results found";
+		// @ts-ignore
+	} else if (response.error) {
+		// @ts-ignore
+		response.error = `${response.error} see documentation at <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">https://www.sketchengine.eu/documentation/corpus-querying/</a>`;
 	}
+	console.log(response);
 	return response;
 }
 
@@ -82,7 +89,6 @@ export function getLines(response: _concordance) {
 		let line: Lines = {"left": left, "right": right, "kwic": kwic, "refs": refs};
 		lines.push(line);
 	});
-	console.log(lines);
 	return lines;
 }
 

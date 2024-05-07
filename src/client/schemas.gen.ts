@@ -2678,6 +2678,7 @@ export const $_doc_put_req = {
     }
 } as const;
 
+// @ts-ignore
 export const $_doc_preview = {
     type: 'object',
     properties: {
@@ -3637,20 +3638,6 @@ export const $_documents_post = {
                 description: 'Metadata of document. For example, additional `attributes and values`.',
                 type: 'object'
             }
-        }
-    }
-} as const;
-
-export const $_doc_preview = {
-    type: 'object',
-    properties: {
-        result: {
-            type: 'string',
-            description: 'Showcase of few lines from the file the corpus was created from (1kB).'
-        },
-        error: {
-            type: 'string',
-            description: 'Unexpected server error. If none Null.'
         }
     }
 } as const;
