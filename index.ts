@@ -30,6 +30,7 @@ type Options = {
   selectQueryId?: string;
   selectQueryCss?: string;
   customUrl?: string;
+  urlparam?: string | boolean;
 };
 
 export class NoskeSearch {
@@ -62,6 +63,7 @@ export class NoskeSearch {
   selectQueryId: string;
   selectQueryCss: string;
   customUrl: string;
+  urlparam: string | boolean;
 
   constructor(options: Options) {
     this.base = options.base;
@@ -93,6 +95,7 @@ export class NoskeSearch {
     this.selectQueryId = options.selectQueryId || "select-query";
     this.selectQueryCss = options.selectQueryCss || "basis-2/12 p-2";
     this.customUrl = options.customUrl || "";
+    this.urlparam = options.urlparam || false;
     (() => this.createHTMLSearchInput())();
     (() => this.clearResults())();
   }
@@ -100,8 +103,7 @@ export class NoskeSearch {
   searchInput() {
     return `<div id="${this.divInputId}" class="${this.div1css}">
               <select id="${this.selectQueryId}" class="${this.selectQueryCss}">
-                <option value="word">word</option>
-                <option value="phrase">phrase</option>
+                <option value="simple">simple</option>
                 <option value="cql">cql</option>
               </select>
               <input
@@ -206,14 +208,14 @@ export class NoskeSearch {
     });
     (async() => { 
       const url = new URL(window.location.href);
-      const oldQuery = url.searchParams.get("q");
-      if (oldQuery) {
-        queryType!.value = url.searchParams.get("selectQueryValue")!;
+      const query = url.searchParams.get("q");
+      if (query) {
+        queryType!.value = "cql";
         const input = document.querySelector<HTMLInputElement>(`input#${this.searchInputId}`);
-        const query = url.searchParams.get("selectQueryValue")! === "word" ? this.normalizeQuery(oldQuery)
-          : url.searchParams.get("selectQueryValue")! === "phrase" ? this.normalizeQuery(oldQuery)
-          : oldQuery.replace('q', '');
-        input!.value = query;
+        // const query = url.searchParams.get("selectQueryValue")! === "word" ? this.normalizeQuery(oldQuery)
+        //   : url.searchParams.get("selectQueryValue")! === "phrase" ? this.normalizeQuery(oldQuery)
+        //   : oldQuery.replace('q', '');
+        input!.value = query.startsWith("q") ? query.slice(1) : query;
         const line = await getCorpus(query, {
           base: this.base,
           corpname: url.searchParams.get("corpname")!,
@@ -227,6 +229,7 @@ export class NoskeSearch {
           pagesize: parseInt(url.searchParams.get("pagesize")!),
           fromp: parseInt(url.searchParams.get("fromp")!),
           selectQueryId: this.selectQueryId,
+          urlparam: true
         });
         await this.transformResponse(line);
         await this.createPagination();
@@ -249,7 +252,7 @@ export class NoskeSearch {
       pagination!.innerHTML = `<select id="${this.selectId}" class="${this.selectcss}">
        ${Array.from({ length: pages }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
        </select>`;
-      responseToHTML(lines, this.hitsId, stats!, this.customUrl);
+      responseToHTML(lines, this.hitsId, stats!, this.customUrl, this.urlparam);
     }
   }
 

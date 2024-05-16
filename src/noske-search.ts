@@ -22,6 +22,7 @@ type Options = {
 	pagesize: number;
 	fromp: number;
 	selectQueryId?: string;
+	urlparam?: boolean;
 };
 
 OpenAPI.interceptors.response.use((response) => {
@@ -50,8 +51,8 @@ function wrapQuery(query: string) {
 
 export async function getCorpus(query: string, options: Options) {
 	const queryType = document.querySelector<HTMLSelectElement>(`#${options.selectQueryId}`);
-	const queryTypeValue = queryType!.value;
-	var handledQuery = queryTypeValue === "word" ? `q"${query}"` : queryTypeValue === "phrase" ? wrapQuery(query) : `q${query}`;
+	const queryTypeValue = options.urlparam ? "url" : queryType!.value;
+	var handledQuery = queryTypeValue === "simple" ? wrapQuery(query) : queryTypeValue === "url" ? query : `q${query}`;
 	const response = await CorpusSearchService.getConcordance({
 		corpname: options.corpname,
 		q: handledQuery,
@@ -77,7 +78,7 @@ export async function getCorpus(query: string, options: Options) {
 	urlparam.set("refs", options.refs);
 	urlparam.set("pagesize", options.pagesize.toString());
 	urlparam.set("fromp", options.fromp.toString());
-	urlparam.set("selectQueryValue", queryTypeValue!);
+	urlparam.set("selectQueryValue", "url");
 	window.history.pushState({}, "", `${window.location.pathname}?${urlparam}`);
 	if (response.Lines && response.Lines!.length === 0) {
 		return "No results found";
@@ -126,7 +127,7 @@ function checkRefs(refs: Array<string>, refOrDoc: boolean = false) {
 	}
 }
 
-export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number, customUrl: string) {
+export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number, customUrl: string, urlparam: string | boolean = false) {
 	const hits = document.querySelector<HTMLDivElement>(`#${containerId}`);
 	hits!.innerHTML = lines.map((line) => {
 		let left = line.left;
@@ -139,7 +140,7 @@ export function responseToHTML(lines: Array<Lines>, containerId: string, stats: 
 		return (
 			`<div class="flex flex-row">
 				<div class="p-2 border basis-11/12">
-					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${hashId}">
+					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${urlparam}${hashId}">
 						<span class="text-sm text-gray-500">${left}</span>
 						<span class="text-lg text-red-500">${kwic}</span>
 						<span class="text-sm text-gray-500">${right}</span>

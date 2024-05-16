@@ -14,7 +14,8 @@ const search = new NoskeSearch({
   pagesize: 20,
   fromp: 1,
   inputPlaceholder: "Suche nach Wörter, Phrase oder CQL-Query (Regex erlaubt)",
-  customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition"
+  customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
+  urlparam: "&img=on"
 });
 
 search.search();
