@@ -33,6 +33,36 @@ type Options = {
   urlparam?: string | boolean;
 };
 
+/**
+  * @param base - API base URL
+  * @param coprname - corpus name of the created Noske verticals
+  * @param attr - vertical attributes
+  * @param structs - structure elements of verticals
+  * @param kwicleftctx - number of left kwic e.g. #100 as string
+  * @param kwicrightctx - number of right kwic e.g. #100 as string
+  * @param refs - structure attributes e.g. doc.id
+  * @param pagesize - number of results lines e.g. 20
+  * @param fromp - page number to fetch
+  * @param searchInputId - html input element id
+  * @param buttonId - not in use
+  * @param hitsId - html div element id used for the hits div element
+  * @param inputPlaceholder - input element placeholder string
+  * @param containerId - div html element id the search interface will be attached to
+  * @param results - string to show of now results were found
+  * @param paginationId - div html element id for the pagination
+  * @param selectId - select html element id
+  * @param selectcss - select html element classes for css handling
+  * @param inputcss - input html element classes for css handling
+  * @param div1css - div html element 1 classes for css handling 
+  * @param div2css - div html element 2 classes for css handling
+  * @param div3css - div html element 3 classes for css handling
+  * @param divInputId - div html element id as parent for the input element
+  * @param paginationcss - div html element classes for css handling
+  * @param selectQueryId - select html element id
+  * @param selectQueryCss - select html element classes for css handling
+  * @param customUrl - URL base used to link results lines
+  * @param urlparam - url parameters attached to the results linkes link
+  */
 export class NoskeSearch {
   base: string;
   corpname: string;
@@ -113,16 +143,26 @@ export class NoskeSearch {
                 placeholder="${this.inputPlaceholder}"
               />
             </div>
-            <div id="${this.hitsId}" class="${this.div2css}">
-            </div>
-            <div id="${this.paginationId}" class="${this.div3css}">
-            </div>
           `;
+  }
+
+  searchHits() {
+    return `<div id="${this.hitsId}-init" class="${this.div2css}">
+            </div>`;
+  }
+
+  searchPagination() {
+    return `<div id="${this.paginationId}-init" class="${this.div3css}">
+          </div>`
   }
 
   createHTMLSearchInput() {
     const container = document.querySelector<HTMLDivElement>(`#${this.containerId}`);
     container!.innerHTML = this.searchInput();
+    const hits = document.querySelector<HTMLDivElement>(`#${this.hitsId}`);
+    hits!.innerHTML = this.searchHits();
+    const pagination = document.querySelector<HTMLDivElement>(`#${this.paginationId}`);
+    pagination!.innerHTML = this.searchPagination();
   }
 
   async createPagination(currentPage: number = 1) {
@@ -156,7 +196,7 @@ export class NoskeSearch {
     return query.replace('q"', '').replace(/"/g, "").trim();
   }
 
-  search() {
+  search(debug: boolean = false) {
     if (this.base === undefined || this.base === "") throw new Error("Base URL is not defined");
     OpenAPI.BASE = this.base;
     const queryType = document.querySelector<HTMLSelectElement>(`#${this.selectQueryId}`);
@@ -180,6 +220,7 @@ export class NoskeSearch {
           fromp: this.fromp,
           selectQueryId: this.selectQueryId
         });
+        if (debug && line !== null) console.log(line);
         await this.transformResponse(line);
         await this.createPagination();
       }
@@ -202,6 +243,7 @@ export class NoskeSearch {
           fromp: this.fromp,
           selectQueryId: this.selectQueryId
         });
+        if (debug && line !== null) console.log(line);
         await this.transformResponse(line);
         await this.createPagination();
       }
@@ -210,12 +252,12 @@ export class NoskeSearch {
       const url = new URL(window.location.href);
       const query = url.searchParams.get("q");
       if (query) {
-        queryType!.value = "cql";
+        debug ? queryType!.value = "simple" : queryType!.value = "cql";
         const input = document.querySelector<HTMLInputElement>(`input#${this.searchInputId}`);
         // const query = url.searchParams.get("selectQueryValue")! === "word" ? this.normalizeQuery(oldQuery)
         //   : url.searchParams.get("selectQueryValue")! === "phrase" ? this.normalizeQuery(oldQuery)
         //   : oldQuery.replace('q', '');
-        input!.value = query.startsWith("q") ? query.slice(1) : query;
+        input!.value = query?.startsWith("q") ? query.slice(1) : query;
         const line = await getCorpus(query, {
           base: this.base,
           corpname: url.searchParams.get("corpname")!,
@@ -231,6 +273,7 @@ export class NoskeSearch {
           selectQueryId: this.selectQueryId,
           urlparam: true
         });
+        if (debug && line !== null) console.log(line);
         await this.transformResponse(line);
         await this.createPagination();
       }

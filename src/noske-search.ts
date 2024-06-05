@@ -109,44 +109,89 @@ export function getStats(response: _concordance) {
 	return stats;
 }
 
-function checkRefs(refs: Array<string>, refOrDoc: boolean = false) {
-	if (refOrDoc) {
+function checkRefs(refs: Array<string>, doc: boolean = false): Array<string> | null {
+	if (doc) {
 		for (let ref of refs) {
-			if (ref.startsWith("doc")) {
-				return ref.split("=")[1];
+			if (ref.startsWith("doc.id")) {
+				return [ref.split("=")[1]];
 			}
 		}
 	} else {
-		for (let ref of refs.slice(1)) {
-			if (ref === "" || ref === undefined || ref === null) {
-				return "";
+		var refIds = [];
+		for (let ref of refs) {
+			if (ref === "" || ref === undefined || ref === null || ref.startsWith("doc")) {
+				continue;
 			} else {
-				return `#${ref.split("=")[1]}`;
+				refIds.push(ref);
 			}
 		}
+		return refIds;
 	}
+	return null;
 }
 
 export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number, customUrl: string, urlparam: string | boolean = false) {
 	const hits = document.querySelector<HTMLDivElement>(`#${containerId}`);
-	hits!.innerHTML = lines.map((line) => {
+	hits!.innerHTML = `
+		<div class="flex flex-row">
+			<div class="p-2 border basis-full">
+				<table class="table">
+					<thead>
+					<tr class="text-center" id="hits-header-row">
+						
+					</tr>
+					</thead>
+					<tbody id="hits-table-body">
+					</tbody>
+					<tfoot>
+						<tr>
+							<td class="text-sm text-gray-500"></td>
+							<td class="text-sm text-gray-500"></td>
+							<td class="text-sm text-gray-500"></td>
+							<td class="text-sm text-gray-500"></td>
+							<td class="text-sm text-gray-500 text-center">${stats} Treffer</td>
+							<td class="text-sm text-gray-500"></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+		`
+	const hitsBody = document.querySelector<HTMLTableSectionElement>("#hits-table-body");
+	// hitsBody!.innerHTML
+	var tableHeaderStatic = `<th class="text-sm text-gray-500">Left KWIC</th>
+							<th class="text-sm text-gray-500">Context</th>
+							<th class="text-sm text-gray-500">Right KWIC</th>`;
+	var tableHeaderGeneric = "";
+	const results = lines.map((line) => {
 		let left = line.left;
 		let right = line.right;
 		let kwic = line.kwic;
 		let refs = line.refs;
 		let docId = checkRefs(refs, true);
-		let hashId = checkRefs(refs, false);
+		let refsNorm = checkRefs(refs, false);
 		let customUrlNormalized = customUrl.endsWith("/") ? customUrl : customUrl + "/";
+		let refsHeader = refs!.filter((ref) => ref.length > 0).map((ref) => `<th class="text-sm text-gray-500 p-2">${ref.split("=")[0]}</th>`).join("");
+		tableHeaderGeneric = refsHeader;
+		let refsColumn = refs!.filter((ref) => ref.length > 0).map((ref) => `<td class="text-center text-sm text-gray-500 p-2">${ref.split("=")[1]}</td>`).join("");
+		let hashId = refsNorm!.filter((ref) => !ref.startsWith("doc") && ref.length > 0).map((ref) => `#${ref.split("=")[1]}`).join("");
 		return (
-			`<div class="flex flex-row">
-				<div class="p-2 border basis-11/12">
+			`
+			<tr class="p-2">
+				${refsColumn}
+				<td class="text-sm text-gray-500 p-2 text-right">${left}</td>
+				<td class="text-lg text-red-500 p-2 text-center">
 					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${urlparam}${hashId}">
-						<span class="text-sm text-gray-500">${left}</span>
-						<span class="text-lg text-red-500">${kwic}</span>
-						<span class="text-sm text-gray-500">${right}</span>
+						${kwic}
 					</a>
-				</div>
-			</div>`
+				</td>
+				<td class="text-sm text-gray-500 p-2 text-left">${right}</td>
+			</tr>
+			`
 		);
-	}).join("") + `<label class="text-sm text-gray-500">${stats} Treffer</label>`;
+	}).join("");
+	const tableHeader = tableHeaderGeneric + tableHeaderStatic;
+	const hitsHeader = document.querySelector<HTMLTableSectionElement>("#hits-header-row");
+	hitsHeader!.innerHTML = tableHeader;
+	hitsBody!.innerHTML = results;
 }

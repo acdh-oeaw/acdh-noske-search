@@ -7,15 +7,15 @@ const search = new NoskeSearch({
   viewmode: "kwic",
   attrs: "word,id",
   format: "json",
-  structs: "doc,head,p,imprimatur,list",
+  structs: "doc,docTitle,head,p,imprimatur,list",
   kwicrightctx: "100#",
   kwicleftctx: "100#",
-  refs: "doc.id,p.id,head.id,imprimatur.id,list.id",
+  refs: "doc.id,doc.corpus,docTitle.id,p.id,head.id,imprimatur.id,list.id",
   pagesize: 20,
   fromp: 1,
   inputPlaceholder: "Suche nach Wörter, Phrase oder CQL-Query (Regex erlaubt)",
   customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
-  urlparam: "&img=on"
+  urlparam: "&img=on",
 });
 
-search.search();
+search.search(true);
