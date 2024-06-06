@@ -1,6 +1,7 @@
 import { CorpusSearchService } from "./client/services.gen.ts";
 import { OpenAPI } from "./client/core/OpenAPI.ts";
 import { _concordance } from "./client/types.gen.ts";
+import type { Hits } from "../index";
 
 type Lines = {
 	left: string;
@@ -66,6 +67,7 @@ export async function getCorpus(query: string, options: Options) {
 		pagesize: options.pagesize,
 		fromp: options.fromp,
 	});
+	queryType!.value = queryTypeValue === "url" ? "cql" : queryTypeValue;
 	const urlparam = new URLSearchParams(window.location.search);
 	urlparam.set("corpname", options.corpname);
 	urlparam.set("q", handledQuery);
@@ -130,38 +132,58 @@ function checkRefs(refs: Array<string>, doc: boolean = false): Array<string> | n
 	return null;
 }
 
-export function responseToHTML(lines: Array<Lines>, containerId: string, stats: number, customUrl: string, urlparam: string | boolean = false) {
-	const hits = document.querySelector<HTMLDivElement>(`#${containerId}`);
-	hits!.innerHTML = `
-		<div class="flex flex-row">
-			<div class="p-2 border basis-full">
-				<table class="table">
-					<thead>
-					<tr class="text-center" id="hits-header-row">
-						
+const hitsCss = {
+	div: "overflow-x-auto",
+	table: "table",
+	thead: "text-center",
+	trHead: "",
+	th: "text-sm text-gray-500",
+	tbody: "",
+	trBody: "p-2",
+	td: "text-sm text-gray-500",
+	tfoot: "",
+	trFoot: "",
+	tdFoot: "text-sm text-gray-500 text-center",
+	kwic: "text-lg text-red-500",
+	left: "text-sm text-gray-500 p-2 text-right",
+	right: "text-sm text-gray-500 p-2 text-left",
+};
+
+export function responseToHTML(
+	lines: Array<Lines>,
+	containerId: string,
+	stats: number,
+	customUrl: string,
+	urlparam: string | boolean = false,
+	hits: Hits
+) {
+	const hitsContainer = document.querySelector<HTMLDivElement>(`#${containerId}`);
+	hitsContainer!.innerHTML = `
+		<div class="${hits.css?.div || hitsCss.div}">
+			<table class="${hits.css?.table || hitsCss.table}">
+				<thead class="${hits.css?.thead || hitsCss.thead}">
+				<tr class="${hits.css?.trHead || hitsCss.trHead}" id="hits-header-row">
+				</tr>
+				</thead>
+				<tbody class="${hits.css?.tbody || hitsCss.tbody}" id="hits-table-body">
+				</tbody>
+				<tfoot class="${hits.css?.tfoot || hitsCss.tfoot}">
+					<tr class="${hits.css?.trFoot || hitsCss.trFoot}">
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}">${stats}</td>
+						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
 					</tr>
-					</thead>
-					<tbody id="hits-table-body">
-					</tbody>
-					<tfoot>
-						<tr>
-							<td class="text-sm text-gray-500"></td>
-							<td class="text-sm text-gray-500"></td>
-							<td class="text-sm text-gray-500"></td>
-							<td class="text-sm text-gray-500"></td>
-							<td class="text-sm text-gray-500 text-center">${stats} Treffer</td>
-							<td class="text-sm text-gray-500"></td>
-						</tr>
-					</tfoot>
-				</table>
-			</div>
+				</tfoot>
+			</table>
 		</div>
 		`
 	const hitsBody = document.querySelector<HTMLTableSectionElement>("#hits-table-body");
-	// hitsBody!.innerHTML
-	var tableHeaderStatic = `<th class="text-sm text-gray-500">Left KWIC</th>
-							<th class="text-sm text-gray-500">Context</th>
-							<th class="text-sm text-gray-500">Right KWIC</th>`;
+	var tableHeaderStatic = `<th class="${hits.css?.th || hitsCss.th}">Left KWIC</th>
+							<th class="${hits.css?.th || hitsCss.th}">Context</th>
+							<th class="${hits.css?.th || hitsCss.th}">Right KWIC</th>`;
 	var tableHeaderGeneric = "";
 	const results = lines.map((line) => {
 		let left = line.left;
@@ -171,21 +193,21 @@ export function responseToHTML(lines: Array<Lines>, containerId: string, stats: 
 		let docId = checkRefs(refs, true);
 		let refsNorm = checkRefs(refs, false);
 		let customUrlNormalized = customUrl.endsWith("/") ? customUrl : customUrl + "/";
-		let refsHeader = refs!.filter((ref) => ref.length > 0).map((ref) => `<th class="text-sm text-gray-500 p-2">${ref.split("=")[0]}</th>`).join("");
+		let refsHeader = refs!.filter((ref) => ref.length > 0).map((ref) => `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`).join("");
 		tableHeaderGeneric = refsHeader;
-		let refsColumn = refs!.filter((ref) => ref.length > 0).map((ref) => `<td class="text-center text-sm text-gray-500 p-2">${ref.split("=")[1]}</td>`).join("");
+		let refsColumn = refs!.filter((ref) => ref.length > 0).map((ref) => `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`).join("");
 		let hashId = refsNorm!.filter((ref) => !ref.startsWith("doc") && ref.length > 0).map((ref) => `#${ref.split("=")[1]}`).join("");
 		return (
 			`
-			<tr class="p-2">
+			<tr class="${hits.css?.trBody || hitsCss.trBody}">
 				${refsColumn}
-				<td class="text-sm text-gray-500 p-2 text-right">${left}</td>
-				<td class="text-lg text-red-500 p-2 text-center">
+				<td class="${hits.css?.left || hitsCss.left}">${left}</td>
+				<td class="${hits.css?.kwic || hitsCss.kwic}">
 					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${urlparam}${hashId}">
 						${kwic}
 					</a>
 				</td>
-				<td class="text-sm text-gray-500 p-2 text-left">${right}</td>
+				<td class="${hits.css?.right || hitsCss.right}">${right}</td>
 			</tr>
 			`
 		);
