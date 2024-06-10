@@ -12,7 +12,7 @@ You can also include the Package via CDN:
 
 ```html
 <script type="module">
-  import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.7/dist/index.js";
+  import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search/dist/index.js";
   const search = new NoskeSearch({container: "noske-search"});
 
   search.stats({...});
