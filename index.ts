@@ -78,32 +78,35 @@ type Stats = {
  * @param container - html div element id to initialize search
  */
 export class NoskeSearch {
-  viewmode: "kwic" | "sen" | undefined = "kwic";
-  attrs = "word,id";
-  format: "json" | "xml" | "csv" | "tsv" | "txt" | "xls" | undefined = "json";
-  structs = "doc";
-  kwicrightctx = "100#";
-  kwicleftctx = "100#";
-  refs = "doc.id";
-  pagesize = 20;
-  fromp = 1;
-  container = "noske-search";
-  inputPlaceholder = "Search for words, phrases or CQL queries (Regex allowed)";
-  hitsCss = "p-2";
+  private viewmode: "kwic" | "sen" | undefined = "kwic";
+  private attrs = "word,id";
+  private format: "json" | "xml" | "csv" | "tsv" | "txt" | "xls" | undefined =
+    "json";
+  private structs = "doc";
+  private kwicrightctx = "100#";
+  private kwicleftctx = "100#";
+  private refs = "doc.id";
+  private pagesize = 20;
+  private fromp = 1;
+  private container = "noske-search";
+  private inputPlaceholder =
+    "Search for words, phrases or CQL queries (Regex allowed)";
+  private hitsCss = "p-2";
   // buttonId = "search-button";
-  results = "No Hits found. Please try another search query.";
-  paginationcss = "p-2";
-  selectcss = "basis-2/12 p-2";
-  inputcss = "basis-10/12 rounded border p-2";
-  div1css = "flex flex-row p-2";
-  div2css = "text-center p-2";
-  div3css = "text-center p-2";
-  selectQueryCss = "basis-2/12 p-2";
-  customUrl = "";
-  urlparam = false;
-  statsDiv = "flex flex-row m-2";
-  statsLabel = "p-2";
-  statsLabelValue = "Hits:";
+  private results = "No Hits found. Please try another search query.";
+  private paginationcss = "p-2";
+  private selectcss = "basis-2/12 p-2";
+  private inputcss = "basis-10/12 rounded border p-2";
+  private div1css = "flex flex-row p-2";
+  // private div2css = "text-center p-2";
+  // private div3css = "text-center p-2";
+  private selectQueryCss = "basis-2/12 p-2";
+  private customUrl = "";
+  private urlparam = false;
+  private statsDiv = "flex flex-row m-2";
+  private statsLabel = "p-2";
+  private statsLabelValue = "Hits:";
+  public minQueryLength = 2;
 
   constructor(options?: Options) {
     if (!options?.container)
@@ -126,7 +129,7 @@ export class NoskeSearch {
    *  @param client.coprname - corpus name of the created Noske verticals
    *  @param client.attr - vertical attributes
    *  @param client.structs - structure elements of verticals
-   *  @param clientkwicleftctx - number of left kwic e.g. #100 as string
+   *  @param client.kwicleftctx - number of left kwic e.g. #100 as string
    *  @param client.kwicrightctx - number of right kwic e.g. #100 as string
    *  @param client.refs - structure attributes e.g. doc.id
    *  @param client.pagesize - number of results lines e.g. 20
@@ -178,7 +181,7 @@ export class NoskeSearch {
       if (e.key !== "Enter") return;
       // @ts-ignore
       const query = e.target!.value;
-      if (query.length > 3) {
+      if (query.length > this.minQueryLength) {
         const line = await getCorpus(query, {
           base: client.base,
           corpname: client.corpname,
@@ -217,7 +220,7 @@ export class NoskeSearch {
     input!.addEventListener("change", async (e) => {
       // @ts-ignore
       const query = e.target!.value;
-      if (query.length > 3) {
+      if (query.length > this.minQueryLength) {
         const line = await getCorpus(query, {
           base: client.base,
           corpname: client.corpname,

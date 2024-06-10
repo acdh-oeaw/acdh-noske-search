@@ -4,11 +4,10 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="./src/style.css" rel="stylesheet">
+    <link href="./src/style.css" rel="stylesheet" />
     <title>NoSke Search Interface</title>
   </head>
   <body>
-    
     <div id="noske-search"></div>
     <div id="hitsbox-test"></div>
     <div class="flex self-center">
@@ -16,8 +15,8 @@
       <div id="noske-stats"></div>
     </div>
     <script type="module">
-      import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.6/dist/index.js";
-      const search = new NoskeSearch({container: "noske-search"});
+      import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.8/dist/index.js";
+      const search = new NoskeSearch({ container: "noske-search" });
 
       search.search({
         debug: true,
@@ -32,7 +31,7 @@
           id: "hitsbox-test",
           css: {
             table: "table-auto",
-          }
+          },
         },
         pagination: {
           id: "noske-pagination-test",
@@ -40,8 +39,9 @@
         searchInput: {
           id: "noske-input",
         },
-        config:{
-          customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
+        config: {
+          customUrl:
+            "https://wiener-diarium.github.io/curved-conjunction/edition",
           urlparam: "&img=on",
         },
         stats: {
