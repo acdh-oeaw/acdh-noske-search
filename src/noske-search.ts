@@ -141,9 +141,6 @@ const hitsCss = {
 	tbody: "",
 	trBody: "p-2",
 	td: "text-sm text-gray-500",
-	tfoot: "",
-	trFoot: "",
-	tdFoot: "text-sm text-gray-500 text-center",
 	kwic: "text-lg text-red-500",
 	left: "text-sm text-gray-500 p-2 text-right",
 	right: "text-sm text-gray-500 p-2 text-left",
@@ -152,7 +149,6 @@ const hitsCss = {
 export function responseToHTML(
 	lines: Array<Lines>,
 	containerId: string,
-	stats: number,
 	customUrl: string,
 	urlparam: string | boolean = false,
 	hits: Hits
@@ -167,16 +163,6 @@ export function responseToHTML(
 				</thead>
 				<tbody class="${hits.css?.tbody || hitsCss.tbody}" id="hits-table-body">
 				</tbody>
-				<tfoot class="${hits.css?.tfoot || hitsCss.tfoot}">
-					<tr class="${hits.css?.trFoot || hitsCss.trFoot}">
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}">${stats}</td>
-						<td class="${hits.css?.tdFoot || hitsCss.tdFoot}"></td>
-					</tr>
-				</tfoot>
 			</table>
 		</div>
 		`

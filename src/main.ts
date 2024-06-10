@@ -1,7 +1,7 @@
 import './style.css'
 import { NoskeSearch } from '../index';
 
-const search = new NoskeSearch();
+const search = new NoskeSearch({container: "noske-search"});
 
 search.search({
   debug: true,
@@ -33,5 +33,8 @@ search.search({
   config:{
     customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
     urlparam: "&img=on",
-  }
+  },
+  stats: {
+    id: "noske-stats",
+  },
 });

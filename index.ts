@@ -54,12 +54,18 @@ export type Hits = {
     tbody?: string;
     trBody?: string;
     td?: string;
-    tfoot?: string;
-    trFoot?: string;
-    tdFoot?: string;
     kwic?: string;
     left?: string;
     right?: string;
+  };
+}
+
+type Stats = {
+  id: string;
+  label?: string;
+  css?: {
+    div?: string;
+    label?: string;
   };
 }
 
@@ -77,10 +83,10 @@ export class NoskeSearch {
   pagesize = 20;
   fromp = 1;
   container = "noske-search";
-  inputPlaceholder = "Suche nach Wörtern oder Phrasen";
+  inputPlaceholder = "Search for words, phrases or CQL queries (Regex allowed)";
   hitsCss = "p-2";
   // buttonId = "search-button";
-  results = "Keine Treffer gefunden";
+  results = "No Hits found. Please try another search query.";
   paginationcss = "p-2";
   selectcss = "basis-2/12 p-2";
   inputcss = "basis-10/12 rounded border p-2";
@@ -90,48 +96,13 @@ export class NoskeSearch {
   selectQueryCss = "basis-2/12 p-2";
   customUrl = "";
   urlparam = false;
+  statsDiv = "flex flex-row m-2";
+  statsLabel = "p-2";
+  statsLabelValue = "Hits:";
 
   constructor(options?: Options) {
     if (!options?.container) console.log("No container defined. Default container id set to 'noske-search'.")
     this.container = options?.container || this.container;
-  }
-
-  private searchHits({id, css}: Hits) {
-    if (!id) throw new Error("search hits id is not defined");
-    const hits = document.querySelector<HTMLDivElement>(`#${id}`);
-    hits!.innerHTML = `<div id="${id}-init" class="${css?.div || this.hitsCss}"></div>`;
-  }
-
-  private searchPagination ({id, css}: Pagination) {
-    if (!id) throw new Error("search pagination id is not defined");
-    const pagination = document.querySelector<HTMLDivElement>(`#${id}`);
-    pagination!.innerHTML = `<div id="${id}-init"
-                              class="${css?.div || this.paginationcss}"></div>`
-  }
-
-  private searchInput({
-    id, 
-    placeholder, 
-    css
-  }: SearchInput) {
-    if (!this.container) throw new Error("main search div container is not defined");
-    if (!id) throw new Error("search input id is not defined");
-    const container = document.querySelector<HTMLDivElement>(`#${this.container}`);
-    container!.innerHTML = 
-      `<div id="${id}" class="${css?.div || this.div1css}">
-        <select id="${`${id}-select`}"
-          class="${css?.select || this.selectQueryCss}">
-          <option value="simple">simple</option>
-          <option value="cql">cql</option>
-        </select>
-        <input
-          type="search"
-          id="${`${id}-input`}"
-          class="${css?.input || this.inputcss}"
-          placeholder="${placeholder || this.inputPlaceholder}"
-        />
-      </div>
-    `;
   }
  
   // private normalizeQuery(query: string) {
@@ -163,7 +134,8 @@ export class NoskeSearch {
     hits,
     pagination,
     searchInput,
-    config
+    config,
+    stats
   }: {
     debug?: boolean;
     hits: Hits;
@@ -171,13 +143,15 @@ export class NoskeSearch {
     searchInput: SearchInput;
     client: Client;
     config?: Config;
+    stats: Stats;
   }
-  ) {
+  ): void {
     this.searchInput(searchInput);
     this.clearResults(
       hits.id,
       pagination.id,
-      searchInput.id
+      searchInput.id,
+      stats.id
     );
     if (!hits.id) throw new Error("hits.id is not defined");
     this.searchHits(hits);
@@ -214,8 +188,8 @@ export class NoskeSearch {
           selectQueryId: `${searchInput?.id}-select`
         });
         if (debug && line !== null) console.log(line);
-        await this.transformResponse(line, client, hits, pagination, config!);
-        await this.createPagination(1, client, hits, pagination, searchInput.id, config!);
+        await this.transformResponse(line, client, hits, pagination, config!, stats!);
+        await this.createPagination(1, client, hits, pagination, searchInput.id, config!, stats!);
       }
     });
 
@@ -238,8 +212,8 @@ export class NoskeSearch {
           selectQueryId: `${searchInput?.id}-select`
         });
         if (debug && line !== null) console.log(line);
-        await this.transformResponse(line, client, hits, pagination, config!);
-        await this.createPagination(1, client, hits, pagination, searchInput.id, config!);
+        await this.transformResponse(line, client, hits, pagination, config!, stats!);
+        await this.createPagination(1, client, hits, pagination, searchInput.id, config!, stats!);
       }
     });
     
@@ -270,10 +244,57 @@ export class NoskeSearch {
           urlparam: true
         });
         if (debug && line !== null) console.log(line);
-        await this.transformResponse(line, client, hits, pagination, config!);
-        await this.createPagination(1, client, hits, pagination, searchInput.id, config!);
+        await this.transformResponse(line, client, hits, pagination, config!, stats!);
+        await this.createPagination(1, client, hits, pagination, searchInput.id, config!, stats!);
       }
     })();
+  }
+
+  private searchHits({id, css}: Hits): void {
+    if (!id) throw new Error("search hits id is not defined");
+    const hits = document.querySelector<HTMLDivElement>(`#${id}`);
+    hits!.innerHTML = `<div id="${id}-init" class="${css?.div || this.hitsCss}"></div>`;
+  }
+
+  private searchPagination ({id, css}: Pagination): void {
+    if (!id) throw new Error("search pagination id is not defined");
+    const pagination = document.querySelector<HTMLDivElement>(`#${id}`);
+    pagination!.innerHTML = `<div id="${id}-init"
+                              class="${css?.div || this.paginationcss}"></div>`
+  }
+
+  private searchInput({
+    id, 
+    placeholder, 
+    css
+  }: SearchInput): void {
+    if (!this.container) throw new Error("main search div container is not defined");
+    if (!id) throw new Error("search input id is not defined");
+    const container = document.querySelector<HTMLDivElement>(`#${this.container}`);
+    container!.innerHTML = 
+      `<div id="${id}" class="${css?.div || this.div1css}">
+        <select id="${`${id}-select`}"
+          class="${css?.select || this.selectQueryCss}">
+          <option value="simple">simple</option>
+          <option value="cql">cql</option>
+        </select>
+        <input
+          type="search"
+          id="${`${id}-input`}"
+          class="${css?.input || this.inputcss}"
+          placeholder="${placeholder || this.inputPlaceholder}"
+        />
+      </div>
+    `;
+  }
+
+  private transformStats(options: {id: string, css: {div: string, label: string}},
+      stats: number, label: string): void {
+    const statsContainer = document.querySelector<HTMLDivElement>(`#${options.id}`);
+    const html = `<div id="${options.id}-init" class="${options.css.div}">
+                    <label class="${options.css.label}">${label} ${stats}</label>
+                  </div>`;
+    statsContainer!.innerHTML = html;
   }
 
   private async transformResponse(
@@ -281,8 +302,9 @@ export class NoskeSearch {
     client: Client,
     hits: Hits,
     pagination: Pagination,
-    config: Config
-  ) {
+    config: Config,
+    statistics: Stats,
+  ): Promise<void> {
     const hitsContainer = document.querySelector<HTMLDivElement>(`#${hits.id}-init`);
     hitsContainer!.innerHTML = "";
     if (line === "No results found") {
@@ -299,8 +321,17 @@ export class NoskeSearch {
           class="${pagination.css?.select || this.selectcss}">
           ${Array.from({ length: pages }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
         </select>`;
-      responseToHTML(lines, `${hits.id}-init`, stats!, config?.customUrl || this.customUrl, 
+      responseToHTML(lines, `${hits.id}-init`, config?.customUrl || this.customUrl, 
         config?.urlparam || this.urlparam, hits!);
+      if (stats) {
+        this.transformStats({
+          id: statistics.id,
+          css: {
+            div: statistics.css?.div || this.statsDiv,
+            label: statistics.css?.label || this.statsLabel
+          }
+        }, stats, statistics.label || this.statsLabelValue);
+      }
     }
   }
 
@@ -310,8 +341,9 @@ export class NoskeSearch {
     hits: Hits,
     pagination: Pagination,
     searchInputId: string,
-    config: Config
-  ) {
+    config: Config,
+    statistics: Stats
+  ): Promise<void> {
     const paginationEvent = document.querySelector<HTMLSelectElement>(
       `#${pagination.id}-select`);
     paginationEvent!.addEventListener("change", async (e) => {
@@ -333,14 +365,14 @@ export class NoskeSearch {
         fromp: client.fromp || this.fromp,
         selectQueryId: `${searchInputId}-select`
       });
-      await this.transformResponse(line, client, hits, pagination, config);
+      await this.transformResponse(line, client, hits, pagination, config, statistics);
       // @ts-ignore
-      await this.createPagination(e.target!.value, client, hits, pagination.id, searchInputId, config);
+      await this.createPagination(e.target!.value, client, hits, pagination.id, searchInputId, config, statistics);
     });
     paginationEvent!.value = currentPage.toString();
   }
 
-  private clearResults(hitsId: string, paginationId: string, searchInputId: string) {
+  private clearResults(hitsId: string, paginationId: string, searchInputId: string, statsId: string): void {
     const input = document.querySelector<HTMLInputElement>(
       `input#${searchInputId}-input`);
     input!.addEventListener("input", async (e) => {
@@ -351,6 +383,7 @@ export class NoskeSearch {
         hits!.innerHTML = "";
         const pagination = document.querySelector<HTMLDivElement>(`#${paginationId}-init`);
         pagination!.innerHTML = "";
+        document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
         window.history.pushState({}, "", `${window.location.pathname}`);
       }
     });
