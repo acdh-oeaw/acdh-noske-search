@@ -11,7 +11,12 @@ npm i acdh-noske-search
 You can also include the Package via CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/acdh-noske-search/dist/index.js"></script>
+<script type="module">
+    import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.6/dist/index.js";
+    const search = new NoskeSearch({container: "noske-search"});
+
+    search.stats({...});
+</script>
 ```
 
 ## Usage
