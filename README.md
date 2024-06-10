@@ -12,10 +12,10 @@ You can also include the Package via CDN:
 
 ```html
 <script type="module">
-    import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.6/dist/index.js";
-    const search = new NoskeSearch({container: "noske-search"});
+  import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.7/dist/index.js";
+  const search = new NoskeSearch({container: "noske-search"});
 
-    search.stats({...});
+  search.stats({...});
 </script>
 ```
 
@@ -52,11 +52,11 @@ search.search({
 ```
 
 Add the following HTML to your page:
-* the `noske-search` div is the container for the search interface. The Container ID is passed to the `NoskeSearch` constructor and defaults to `noske-search`.
-* the `hitsbox` div is the container for the search results. The Container ID is passed to the `search` method. The ID is required and has not default value.
-* the `noske-pagination` div is the container for the pagination. The Container ID is passed to the `search` method. The ID is required and has not default value.
-* the `noske-stats` div is the container for the search statistics. The Container ID is passed to the `search` method. The ID is required and has not default value.
 
+- the `noske-search` div is the container for the search interface. The Container ID is passed to the `NoskeSearch` constructor and defaults to `noske-search`.
+- the `hitsbox` div is the container for the search results. The Container ID is passed to the `search` method. The ID is required and has not default value.
+- the `noske-pagination` div is the container for the pagination. The Container ID is passed to the `search` method. The ID is required and has not default value.
+- the `noske-stats` div is the container for the search statistics. The Container ID is passed to the `search` method. The ID is required and has not default value.
 
 ```html
 <!doctype html>
@@ -82,72 +82,72 @@ The `NoskeSearch` class is a generic class and can be used with custom types. Th
 
 ```typescript
 type Options = {
-    container?: string;
+  container?: string;
 };
 type Search = {
-    client: Client;
-    hits: Hits;
-    pagination: Pagination;
-    searchInput: SearchInput;
-    stats: Stats;
-    config: Config;
+  client: Client;
+  hits: Hits;
+  pagination: Pagination;
+  searchInput: SearchInput;
+  stats: Stats;
+  config: Config;
 };
 type Config = {
-    results?: string;
-    customUrl?: string;
-    urlparam?: string | boolean;
+  results?: string;
+  customUrl?: string;
+  urlparam?: string | boolean;
 };
 type Client = {
-    base: string;
-    corpname: string;
-    viewmode?: "kwic" | "sen" | undefined;
-    attrs?: string;
-    format?: "json" | "xml" | "csv" | "tsv" | "txt" | "xls" | undefined;
-    structs?: string;
-    kwicrightctx?: string;
-    kwicleftctx?: string;
-    refs?: string;
-    pagesize?: number;
-    fromp?: number;
+  base: string;
+  corpname: string;
+  viewmode?: "kwic" | "sen" | undefined;
+  attrs?: string;
+  format?: "json" | "xml" | "csv" | "tsv" | "txt" | "xls" | undefined;
+  structs?: string;
+  kwicrightctx?: string;
+  kwicleftctx?: string;
+  refs?: string;
+  pagesize?: number;
+  fromp?: number;
 };
 type SearchInput = {
-    id: string;
-    placeholder?: string;
-    css?: {
-        div?: string;
-        select?: string;
-        input?: string;
-    };
+  id: string;
+  placeholder?: string;
+  css?: {
+    div?: string;
+    select?: string;
+    input?: string;
+  };
 };
 type Pagination = {
-    id: string;
-    css?: {
-        div?: string;
-        select?: string;
-    };
+  id: string;
+  css?: {
+    div?: string;
+    select?: string;
+  };
 };
 type Hits = {
-    id: string;
-    css?: {
-        div?: string;
-        table?: string;
-        thead?: string;
-        trHead?: string;
-        th?: string;
-        tbody?: string;
-        trBody?: string;
-        td?: string;
-        kwic?: string;
-        left?: string;
-        right?: string;
-    };
+  id: string;
+  css?: {
+    div?: string;
+    table?: string;
+    thead?: string;
+    trHead?: string;
+    th?: string;
+    tbody?: string;
+    trBody?: string;
+    td?: string;
+    kwic?: string;
+    left?: string;
+    right?: string;
+  };
 };
 type Stats = {
-    id: string;
+  id: string;
+  label?: string;
+  css?: {
+    div?: string;
     label?: string;
-    css?: {
-        div?: string;
-        label?: string;
-    };
+  };
 };
 ```
