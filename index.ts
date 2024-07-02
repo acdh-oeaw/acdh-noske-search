@@ -1,4 +1,7 @@
 import {
+  getWordsList,
+  getItems,
+  itemsToHTML,
   getCorpus,
   getLines,
   getStats,
@@ -12,8 +15,17 @@ type Config = {
   urlparam?: string | boolean;
 };
 
+type Items = {
+  frq: number;
+  relfreq: number;
+  str: string;
+  attr: string;
+};
+
 type Options = {
   container?: string;
+  autocomplete?: boolean;
+  wordlistattr?: Array<string>;
 };
 
 type Client = {
@@ -33,10 +45,12 @@ type Client = {
 type SearchInput = {
   id: string;
   placeholder?: string;
+  button?: string;
   css?: {
     div?: string;
     select?: string;
     input?: string;
+    button?: string;
   };
 };
 
@@ -98,6 +112,8 @@ export class NoskeSearch {
   private selectcss = "basis-2/12 p-2";
   private inputcss = "basis-10/12 rounded border p-2";
   private div1css = "flex flex-row p-2";
+  private button = "search";
+  private buttoncss = "p-2";
   // private div2css = "text-center p-2";
   // private div3css = "text-center p-2";
   private selectQueryCss = "basis-2/12 p-2";
@@ -106,14 +122,18 @@ export class NoskeSearch {
   private statsDiv = "flex flex-row m-2";
   private statsLabel = "p-2";
   private statsLabelValue = "Hits:";
+  private wordlistattr = ["word", "lemma", "type", "id"];
   public minQueryLength = 2;
+  public autocomplete = false;
 
   constructor(options?: Options) {
     if (!options?.container)
       console.log(
         "No container defined. Default container id set to 'noske-search'."
       );
+    this.autocomplete = options?.autocomplete || this.autocomplete;
     this.container = options?.container || this.container;
+    this.wordlistattr = options?.wordlistattr || this.wordlistattr;
   }
 
   // private normalizeQuery(query: string) {
@@ -177,52 +197,92 @@ export class NoskeSearch {
       `input#${searchInput?.id}-input`
     );
 
+    const searchButton = document.querySelector<HTMLButtonElement>(
+      "button#noske-search-button"
+    );
+
     input!.addEventListener("keyup", async (e) => {
-      if (e.key !== "Enter") return;
-      // @ts-ignore
-      const query = e.target!.value;
-      if (query.length > this.minQueryLength) {
-        const line = await getCorpus(query, {
-          base: client.base,
-          corpname: client.corpname,
-          viewmode: client.viewmode || this.viewmode,
-          attrs: client.attrs || this.attrs,
-          format: client.format || this.format,
-          structs: client.structs || this.structs,
-          kwicrightctx: client.kwicrightctx || this.kwicrightctx,
-          kwicleftctx: client.kwicleftctx || this.kwicleftctx,
-          refs: client.refs || this.refs,
-          pagesize: client.pagesize || this.pagesize,
-          fromp: client.fromp || this.fromp,
-          selectQueryId: `${searchInput?.id}-select`,
-        });
-        if (debug && line !== null) console.log(line);
-        await this.transformResponse(
-          line,
-          client,
-          hits,
-          pagination,
-          config!,
-          stats!
-        );
-        await this.createPagination(
-          1,
-          client,
-          hits,
-          pagination,
-          searchInput.id,
-          config!,
-          stats!
-        );
+      if (e.key !== "Enter") {
+        if (
+          this.autocomplete &&
+          // @ts-ignore
+          e.target!.value.length >= this.minQueryLength
+        ) {
+          var allItems: Array<Items> = [];
+          for (let word of this.wordlistattr) {
+            if (word.length === 0) return;
+            const wordList = await getWordsList({
+              corpname: client.corpname,
+              wlattr: word,
+              wlmaxitems: 100,
+              // @ts-ignore
+              wlpat: `.*${e.target!.value}.*`,
+              wltype: "simple",
+              includeNonwords: 1,
+              wlicase: 1,
+              wlminfreq: 0,
+            });
+            if (debug && wordList !== null) console.log(wordList);
+            let items = getItems(wordList, word);
+            allItems.push(...items);
+          }
+          setTimeout(() => {
+            // @ts-ignore
+            itemsToHTML(allItems, searchInput.id);
+          }, 400);
+        } else {
+          return;
+        }
+      } else {
+        // @ts-ignore
+        const query = e.target!.value;
+        if (query.length >= this.minQueryLength) {
+          const line = await getCorpus(query, {
+            corpname: client.corpname,
+            viewmode: client.viewmode || this.viewmode,
+            attrs: client.attrs || this.attrs,
+            format: client.format || this.format,
+            structs: client.structs || this.structs,
+            kwicrightctx: client.kwicrightctx || this.kwicrightctx,
+            kwicleftctx: client.kwicleftctx || this.kwicleftctx,
+            refs: client.refs || this.refs,
+            pagesize: client.pagesize || this.pagesize,
+            fromp: client.fromp || this.fromp,
+            selectQueryId: `${searchInput?.id}-select`,
+          });
+          if (debug && line !== null) console.log(line);
+          await this.transformResponse(
+            line,
+            client,
+            hits,
+            pagination,
+            config!,
+            stats!
+          );
+          await this.createPagination(
+            1,
+            client,
+            hits,
+            pagination,
+            searchInput.id,
+            config!,
+            stats!
+          );
+        }
       }
     });
 
-    input!.addEventListener("change", async (e) => {
+    input!.addEventListener("focus", async () => {
+      setTimeout(() => {
+        document.getElementById("nokse-autocomplete")?.remove();
+      }, 200);
+    });
+
+    searchButton!.addEventListener("click", async () => {
       // @ts-ignore
-      const query = e.target!.value;
-      if (query.length > this.minQueryLength) {
+      const query = input!.value;
+      if (query.length >= this.minQueryLength) {
         const line = await getCorpus(query, {
-          base: client.base,
           corpname: client.corpname,
           viewmode: client.viewmode || this.viewmode,
           attrs: client.attrs || this.attrs,
@@ -254,6 +314,9 @@ export class NoskeSearch {
           stats!
         );
       }
+      setTimeout(() => {
+        document.getElementById("nokse-autocomplete")?.remove();
+      }, 200);
     });
 
     (async () => {
@@ -269,7 +332,6 @@ export class NoskeSearch {
         //   : oldQuery.replace('q', '');
         input!.value = query?.startsWith("q") ? query.slice(1) : query;
         const line = await getCorpus(query, {
-          base: client.base,
           corpname: url.searchParams.get("corpname")!,
           viewmode: url.searchParams.get("viewmode") as "kwic" | "sen",
           attrs: url.searchParams.get("attrs")!,
@@ -324,7 +386,7 @@ export class NoskeSearch {
                               class="${css?.div || this.paginationcss}"></div>`;
   }
 
-  private searchInput({ id, placeholder, css }: SearchInput): void {
+  private searchInput({ id, placeholder, button, css }: SearchInput): void {
     if (!this.container)
       throw new Error("main search div container is not defined");
     if (!id) throw new Error("search input id is not defined");
@@ -342,7 +404,9 @@ export class NoskeSearch {
           id="${`${id}-input`}"
           class="${css?.input || this.inputcss}"
           placeholder="${placeholder || this.inputPlaceholder}"
+          autocomplete="off"
         />
+        <button id="noske-search-button" class="${css?.button || this.buttoncss}">${button || this.button}</button>
       </div>
     `;
   }
@@ -430,7 +494,6 @@ export class NoskeSearch {
         `input#${searchInputId}-input`
       )!.value;
       const line = await getCorpus(query, {
-        base: client.base,
         corpname: client.corpname,
         viewmode: client.viewmode || this.viewmode,
         attrs: client.attrs || this.attrs,
@@ -486,6 +549,7 @@ export class NoskeSearch {
         pagination!.innerHTML = "";
         document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
         window.history.pushState({}, "", `${window.location.pathname}`);
+        document.getElementById("nokse-autocomplete")?.remove();
       }
     });
   }
