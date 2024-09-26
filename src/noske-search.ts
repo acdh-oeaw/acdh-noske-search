@@ -147,6 +147,7 @@ export function getLines(response: _concordance) {
     let left: string = value.Left?.map((word) => word.str).join(" ")!;
     let right: string = value.Right?.map((word) => word.str).join(" ")!;
     let kwic: string = value.Kwic?.map((word) => word.str).join(" ")!;
+    // @ts-ignore
     let kwic_attr: string = value.Kwic?.map((word) => word.attr).join(" ")!;
     let refs: Array<string> = value.Refs?.map((ref) => ref)!;
     let line: Lines = {
@@ -267,7 +268,7 @@ export function responseToHTML(
   containerId: string,
   customUrl: string,
   urlparam: URLParams = false,
-  customUrlTransform: URLCallback,
+  customUrlTransform: URLCallback | false = false,
   hits: Hits
 ) {
   const hitsContainer = document.querySelector<HTMLDivElement>(
