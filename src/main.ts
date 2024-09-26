@@ -1,4 +1,5 @@
 import "./style.css";
+import "../dist/index.d.ts";
 import { NoskeSearch } from "../index";
 
 const search = new NoskeSearch({
@@ -47,17 +48,13 @@ search.search({
       // let kwic = lines.kwic;
       let kwic_attr = lines.kwic_attr?.split("/")[1];
       let refs = lines.refs;
-      let docID = "";
-      for (let ref of refs) {
-        if (ref.startsWith("doc.id")) {
-          docID = ref.split("=")[1];
-        }
-      }
+      let docID = refs[0].split("=")[1];
       let url = new URL(
         "https://abacus.acdh-ch-dev.oeaw.ac.at/edition" + docID
       );
       url.hash = kwic_attr!;
       url.searchParams.set("img", "on");
+      url.searchParams.set("place", "on");
       return url;
     },
   },
