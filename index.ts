@@ -8,18 +8,33 @@ import {
   responseToHTML,
 } from "./src/noske-search";
 import { OpenAPI } from "./src/client";
+import type { Lines } from "./src/noske-search";
 
 type Config = {
   results?: string;
   customUrl?: string;
-  urlparam?: string | boolean;
+  urlparam?: URLParams;
+  customUrlTransform?: URLCallback;
 };
+
+export type URLParams = { [key: string]: string } | boolean;
+
+export type URLCallback = (lines: Lines) => URL;
 
 type Items = {
   frq: number;
   relfreq: number;
   str: string;
   attr: string;
+};
+
+type AutocompleteOptions = {
+  id: string;
+  css: {
+    div: string;
+    ul: string;
+    li: string;
+  };
 };
 
 type Options = {
@@ -123,6 +138,14 @@ export class NoskeSearch {
   private statsLabel = "p-2";
   private statsLabelValue = "Hits:";
   private wordlistattr = ["word", "lemma", "type", "id"];
+  private autocompleteOptions = {
+    id: "noske-autocomplete",
+    css: {
+      div: "bg-white border border-gray-300 absolute ml-40 mt-10 text-left",
+      ul: "p-0",
+      li: "p-2 hover:bg-gray-100 text-sm text-gray-500 hover:cursor-pointer",
+    },
+  };
   public minQueryLength = 2;
   public autocomplete = false;
 
@@ -167,6 +190,7 @@ export class NoskeSearch {
     searchInput,
     config,
     stats,
+    autocompleteOptions,
   }: {
     debug?: boolean;
     hits: Hits;
@@ -175,6 +199,7 @@ export class NoskeSearch {
     client: Client;
     config?: Config;
     stats: Stats;
+    autocompleteOptions?: AutocompleteOptions;
   }): void {
     this.searchInput(searchInput);
     this.clearResults(hits.id, pagination.id, searchInput.id, stats.id);
@@ -228,7 +253,11 @@ export class NoskeSearch {
           }
           setTimeout(() => {
             // @ts-ignore
-            itemsToHTML(allItems, searchInput.id);
+            itemsToHTML(
+              allItems,
+              searchInput.id,
+              autocompleteOptions || this.autocompleteOptions
+            );
           }, 400);
         } else {
           return;
@@ -274,7 +303,9 @@ export class NoskeSearch {
 
     input!.addEventListener("focus", async () => {
       setTimeout(() => {
-        document.getElementById("nokse-autocomplete")?.remove();
+        document
+          .getElementById(autocompleteOptions!.id || "noske-autocomplete")
+          ?.remove();
       }, 200);
     });
 
@@ -315,7 +346,9 @@ export class NoskeSearch {
         );
       }
       setTimeout(() => {
-        document.getElementById("nokse-autocomplete")?.remove();
+        document
+          .getElementById(autocompleteOptions!.id || "noske-autocomplete")
+          ?.remove();
       }, 200);
     });
 
@@ -444,6 +477,7 @@ export class NoskeSearch {
     } else {
       const lines = getLines(line);
       const stats = getStats(line);
+      const client_attr = client.attrs?.split(",");
       const pages = Math.ceil(stats! / (client?.pagesize || this.pagesize));
       const pag = document.querySelector<HTMLDivElement>(
         `#${pagination.id}-init`
@@ -454,9 +488,11 @@ export class NoskeSearch {
         </select>`;
       responseToHTML(
         lines,
+        client_attr!,
         `${hits.id}-init`,
         config?.customUrl || this.customUrl,
         config?.urlparam || this.urlparam,
+        config?.customUrlTransform || false,
         hits!
       );
       if (stats) {

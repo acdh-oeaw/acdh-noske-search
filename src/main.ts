@@ -3,7 +3,7 @@ import { NoskeSearch } from "../index";
 
 const search = new NoskeSearch({
   container: "noske-search",
-  autocomplete: true,
+  autocomplete: false,
   wordlistattr: ["word", "lemma", "id", "persName", "placeName"],
 });
 
@@ -12,7 +12,7 @@ search.minQueryLength = 2;
 search.search({
   debug: true,
   client: {
-    base: "http://localhost:8080",
+    base: "https://abacus-noske.acdh-dev.oeaw.ac.at",
     corpname: "abacus",
     attrs: "word,id,title",
     structs: "doc",
@@ -38,10 +38,29 @@ search.search({
       button: "p-2 border border-gray-500",
     },
   },
-  // config: {
-  //   customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
-  //   urlparam: "&img=on",
-  // },
+  config: {
+    // customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition",
+    // urlparam: { img: "on" },
+    customUrlTransform: (lines) => {
+      // let left = lines.left;
+      // let right = lines.right;
+      // let kwic = lines.kwic;
+      let kwic_attr = lines.kwic_attr?.split("/")[1];
+      let refs = lines.refs;
+      let docID = "";
+      for (let ref of refs) {
+        if (ref.startsWith("doc.id")) {
+          docID = ref.split("=")[1];
+        }
+      }
+      let url = new URL(
+        "https://abacus.acdh-ch-dev.oeaw.ac.at/edition" + docID
+      );
+      url.hash = kwic_attr!;
+      url.searchParams.set("img", "on");
+      return url;
+    },
+  },
   stats: {
     id: "noske-stats",
   },

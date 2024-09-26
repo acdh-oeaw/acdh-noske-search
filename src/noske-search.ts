@@ -1,12 +1,13 @@
 import { CorpusSearchService } from "./client/services.gen.ts";
 import { OpenAPI } from "./client/core/OpenAPI.ts";
 import { _concordance, _wordlist } from "./client/types.gen.ts";
-import type { Hits } from "../index";
+import type { Hits, URLParams, URLCallback } from "../index";
 
-type Lines = {
+export type Lines = {
   left: string;
   right: string;
   kwic: string;
+  kwic_attr?: string;
   refs: Array<string>;
 };
 
@@ -15,6 +16,15 @@ type Items = {
   relfreq: number;
   str: string;
   attr: string;
+};
+
+type AutocompleteOptions = {
+  id: string;
+  css: {
+    div: string;
+    ul: string;
+    li: string;
+  };
 };
 
 type Options = {
@@ -137,8 +147,15 @@ export function getLines(response: _concordance) {
     let left: string = value.Left?.map((word) => word.str).join(" ")!;
     let right: string = value.Right?.map((word) => word.str).join(" ")!;
     let kwic: string = value.Kwic?.map((word) => word.str).join(" ")!;
+    let kwic_attr: string = value.Kwic?.map((word) => word.attr).join(" ")!;
     let refs: Array<string> = value.Refs?.map((ref) => ref)!;
-    let line: Lines = { left: left, right: right, kwic: kwic, refs: refs };
+    let line: Lines = {
+      left: left,
+      right: right,
+      kwic: kwic,
+      kwic_attr: kwic_attr,
+      refs: refs,
+    };
     lines.push(line);
   });
   return lines;
@@ -159,24 +176,21 @@ export function getItems(response: _wordlist, attr: string) {
   return items;
 }
 
-export function itemsToHTML(items: Array<Items>, containerId: string) {
+export function itemsToHTML(
+  items: Array<Items>,
+  containerId: string,
+  autocompleteOptions: AutocompleteOptions
+) {
+  document.getElementById(autocompleteOptions.id)?.remove();
   const container = document.querySelector<HTMLDivElement>(`#${containerId}`);
   let div = document.createElement("div");
-  div.id = "nokse-autocomplete";
-  div.classList.add(
-    "p-2",
-    "border",
-    "border-gray-500",
-    "absolute",
-    "top-20",
-    "left-20",
-    "bg-white",
-    "z-10"
-  );
+  div.id = autocompleteOptions.id;
+  div.classList.add(...autocompleteOptions.css.div.split(" "));
   let ul = document.createElement("ul");
+  ul.classList.add(...autocompleteOptions.css.ul.split(" "));
   items.map((item) => {
     let li = document.createElement("li");
-    li.classList.add("text-sm", "text-gray-500", "pointer");
+    li.classList.add(...autocompleteOptions.css.li.split(" "));
     li.innerHTML = item.str! + " | " + item.frq! + " | " + item.attr!;
     li.addEventListener("click", () => {
       // @ts-ignore
@@ -187,16 +201,15 @@ export function itemsToHTML(items: Array<Items>, containerId: string) {
       ) as HTMLInputElement;
       input.value = "[" + item.attr! + '="' + item.str! + '"]';
       // @ts-ignore
-      input.addEventListener("focusout", (event) => {
-        setTimeout(() => {
-          document.getElementById("nokse-autocomplete")?.remove();
-        }, 200);
-      });
+      // input.addEventListener("focusout", (event) => {
+      //   setTimeout(() => {
+      //     document.getElementById("nokse-autocomplete")?.remove();
+      //   }, 200);
+      // });
     });
     ul.appendChild(li);
   });
   div.appendChild(ul);
-  document.getElementById("nokse-autocomplete")?.remove();
   container?.prepend(div);
 }
 
@@ -250,9 +263,11 @@ const hitsCss = {
 
 export function responseToHTML(
   lines: Array<Lines>,
+  client_attrs: Array<string>,
   containerId: string,
   customUrl: string,
-  urlparam: string | boolean = false,
+  urlparam: URLParams = false,
+  customUrlTransform: URLCallback,
   hits: Hits
 ) {
   const hitsContainer = document.querySelector<HTMLDivElement>(
@@ -281,6 +296,7 @@ export function responseToHTML(
       let left = line.left;
       let right = line.right;
       let kwic = line.kwic;
+      let kwic_attr = line.kwic_attr?.split("/");
       let refs = line.refs;
       let docId = checkRefs(refs, true);
       let refsNorm = checkRefs(refs, false);
@@ -302,16 +318,46 @@ export function responseToHTML(
             `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`
         )
         .join("");
-      let hashId = refsNorm!
-        .filter((ref) => !ref.startsWith("doc") && ref.length > 0)
-        .map((ref) => `#${ref.split("=")[1]}`)
-        .join("");
+      if (customUrlTransform) {
+        var url = customUrlTransform(line);
+      } else {
+        let hashId = refsNorm!
+          .filter((ref) => !ref.startsWith("doc") && ref.length > 0)
+          .map((ref) => `#${ref.split("=")[1]}`)
+          .join("");
+        var id: string | boolean = false;
+        if (client_attrs) {
+          var id_idx = client_attrs.indexOf("id");
+          id = kwic_attr![id_idx];
+        }
+        if (!id) {
+          console.log("id attribute is not present in the client attributes");
+          id = "";
+        }
+        if (customUrlNormalized.startsWith("http")) {
+          var url = new URL(customUrlNormalized + docId);
+        } else {
+          var url = new URL(
+            window.location.origin + customUrlNormalized + docId
+          );
+        }
+        if (typeof urlparam === "object") {
+          for (let param of Object.entries(urlparam)) {
+            url.searchParams.set(param[0], param[1]);
+          }
+        }
+        if (id) {
+          url.hash = id;
+        } else {
+          url.hash = hashId;
+        }
+      }
       return `
 			<tr class="${hits.css?.trBody || hitsCss.trBody}">
 				${refsColumn}
 				<td class="${hits.css?.left || hitsCss.left}">${left}</td>
 				<td class="${hits.css?.kwic || hitsCss.kwic}">
-					<a href="${customUrlNormalized}${docId}?mark=${kwic.trim()}&noSearch=true${urlparam}${hashId}">
+					<a href="${url}">
 						${kwic}
 					</a>
 				</td>
