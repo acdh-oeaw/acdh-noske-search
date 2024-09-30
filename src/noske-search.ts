@@ -305,7 +305,7 @@ export function responseToHTML(
         ? customUrl
         : customUrl + "/";
       let refsHeader = refs!
-        .filter((ref) => ref.length > 0)
+        .filter((ref) => ref.length > 0 && !ref.startsWith("doc"))
         .map(
           (ref) =>
             `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`
@@ -313,12 +313,17 @@ export function responseToHTML(
         .join("");
       tableHeaderGeneric = refsHeader;
       let refsColumn = refs!
-        .filter((ref) => ref.length > 0)
+        .filter((ref) => ref.length > 0 && !ref.startsWith("doc"))
         .map(
           (ref) =>
             `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`
         )
         .join("");
+      /*
+        Checks if the customUrlTransform callback is provided and uses it to transform the url
+        Otherwise, it uses the default logic to transform the url
+        customUrlTransform: (line: Lines) => URL returns a URL object
+      */
       if (customUrlTransform) {
         var url = customUrlTransform(line);
       } else {
