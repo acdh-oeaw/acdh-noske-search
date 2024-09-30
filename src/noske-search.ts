@@ -1,7 +1,13 @@
 import { CorpusSearchService } from "./client/services.gen.ts";
 import { OpenAPI } from "./client/core/OpenAPI.ts";
 import { _concordance, _wordlist } from "./client/types.gen.ts";
-import type { Hits, URLParams, URLCallback } from "../index";
+import type {
+  Hits,
+  URLParams,
+  URLCallback,
+  CustomSynopticView,
+  LineIds,
+} from "../index";
 
 export type Lines = {
   left: string;
@@ -269,6 +275,7 @@ export function responseToHTML(
   customUrl: string,
   urlparam: URLParams = false,
   customUrlTransform: URLCallback | false = false,
+  customSynopticView: CustomSynopticView | false = false,
   hits: Hits
 ) {
   const hitsContainer = document.querySelector<HTMLDivElement>(
@@ -292,8 +299,9 @@ export function responseToHTML(
 							<th class="${hits.css?.th || hitsCss.th}">Context</th>
 							<th class="${hits.css?.th || hitsCss.th}">Right KWIC</th>`;
   var tableHeaderGeneric = "";
+  var lineIds: LineIds = {};
   const results = lines
-    .map((line) => {
+    .map((line, idx) => {
       let left = line.left;
       let right = line.right;
       let kwic = line.kwic;
@@ -324,14 +332,21 @@ export function responseToHTML(
         Otherwise, it uses the default logic to transform the url
         customUrlTransform: (line: Lines) => URL returns a URL object
       */
-      if (customUrlTransform) {
-        var url = customUrlTransform(line);
+      var id: string | boolean = false;
+      if (customSynopticView) {
+        if (client_attrs) {
+          var id_idx = client_attrs.indexOf("id");
+          id = kwic_attr![id_idx];
+        }
+        var lineId = "line-" + idx + "__" + docId + "__" + id;
+        lineIds[lineId] = line;
+      } else if (customUrlTransform) {
+        var url: URL = customUrlTransform(line);
       } else {
         let hashId = refsNorm!
           .filter((ref) => !ref.startsWith("doc") && ref.length > 0)
           .map((ref) => `#${ref.split("=")[1]}`)
           .join("");
-        var id: string | boolean = false;
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
@@ -362,10 +377,14 @@ export function responseToHTML(
 			<tr class="${hits.css?.trBody || hitsCss.trBody}">
 				${refsColumn}
 				<td class="${hits.css?.left || hitsCss.left}">${left}</td>
-				<td class="${hits.css?.kwic || hitsCss.kwic}">
-					<a href="${url}">
+				<td class="${hits.css?.kwic || hitsCss.kwic}" ${lineId! ? `id="${lineId}"` : ""}>
+         ${
+           customSynopticView
+             ? kwic
+             : `<a href="${url!}">
 						${kwic}
-					</a>
+					</a>`
+         }
 				</td>
 				<td class="${hits.css?.right || hitsCss.right}">${right}</td>
 			</tr>
@@ -377,4 +396,5 @@ export function responseToHTML(
     document.querySelector<HTMLTableSectionElement>("#hits-header-row");
   hitsHeader!.innerHTML = tableHeader;
   hitsBody!.innerHTML = results;
+  customSynopticView ? customSynopticView(lineIds) : null;
 }

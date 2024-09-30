@@ -15,7 +15,14 @@ type Config = {
   customUrl?: string;
   urlparam?: URLParams;
   customUrlTransform?: URLCallback;
+  customSynopticView?: CustomSynopticView;
 };
+
+export type LineIds = {
+  [key: string]: Lines;
+};
+
+export type CustomSynopticView = (lineIds: LineIds) => void;
 
 export type URLParams = { [key: string]: string } | boolean;
 
@@ -493,6 +500,7 @@ export class NoskeSearch {
         config?.customUrl || this.customUrl,
         config?.urlparam || this.urlparam,
         config?.customUrlTransform || false,
+        config?.customSynopticView || false,
         hits!
       );
       if (stats) {

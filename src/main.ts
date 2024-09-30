@@ -1,10 +1,11 @@
 import "./style.css";
 import "../dist/index.d.ts";
 import { NoskeSearch } from "../index";
+import { loadContent } from "./lib.ts";
 
 const search = new NoskeSearch({
   container: "noske-search",
-  autocomplete: false,
+  autocomplete: true,
   wordlistattr: ["word", "lemma", "id", "persName", "placeName"],
 });
 
@@ -40,8 +41,8 @@ search.search({
     },
   },
   config: {
-    // customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition",
-    // urlparam: { img: "on" },
+    customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition",
+    urlparam: { img: "on" },
     customUrlTransform: (lines) => {
       // let left = lines.left;
       // let right = lines.right;
@@ -56,6 +57,17 @@ search.search({
       url.searchParams.set("img", "on");
       url.searchParams.set("place", "on");
       return url;
+    },
+    customSynopticView: (resultLineId) => {
+      console.log(resultLineId);
+      // const synopticView = document.getElementById("noske-synoptic-view");
+      Object.entries(resultLineId).forEach(([key, value]) => {
+        document.getElementById(key)?.addEventListener("click", () => {
+          let id = key.split("__")[1];
+          let hash = key.split("__")[2];
+          loadContent(id, "noske-synoptic-view", hash);
+        });
+      });
     },
   },
   stats: {
