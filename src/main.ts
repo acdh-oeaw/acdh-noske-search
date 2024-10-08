@@ -6,7 +6,7 @@ import { loadContent } from "./lib.ts";
 const search = new NoskeSearch({
   container: "noske-search",
   autocomplete: true,
-  wordlistattr: ["word", "lemma", "id", "persName", "placeName"],
+  wordlistattr: ["word", "lemma", "persName", "placeName"],
 });
 
 search.minQueryLength = 2;
@@ -72,5 +72,13 @@ search.search({
   },
   stats: {
     id: "noske-stats",
+  },
+  autocompleteOptions: {
+    id: "noske-autocomplete",
+    css: {
+      div: "absolute top-20 p-2 bg-white",
+      ul: "p-2 border border-gray-500",
+      li: "p-2 border border-gray-500 cursor-pointer",
+    },
   },
 });

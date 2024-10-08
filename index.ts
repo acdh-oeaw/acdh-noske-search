@@ -8,6 +8,7 @@ import {
   responseToHTML,
 } from "./src/noske-search";
 import { OpenAPI } from "./src/client";
+import { debounce } from "@acdh-oeaw/lib";
 import type { Lines } from "./src/noske-search";
 
 type Config = {
@@ -35,9 +36,9 @@ type Items = {
   attr: string;
 };
 
-type AutocompleteOptions = {
+export type AutocompleteOptions = {
   id: string;
-  css: {
+  css?: {
     div: string;
     ul: string;
     li: string;
@@ -208,6 +209,7 @@ export class NoskeSearch {
     stats: Stats;
     autocompleteOptions?: AutocompleteOptions;
   }): void {
+    console.log("search initialized");
     this.searchInput(searchInput);
     this.clearResults(hits.id, pagination.id, searchInput.id, stats.id);
     if (!hits.id) throw new Error("hits.id is not defined");
@@ -233,94 +235,74 @@ export class NoskeSearch {
       "button#noske-search-button"
     );
 
-    input!.addEventListener("keyup", async (e) => {
-      if (e.key !== "Enter") {
-        if (
-          this.autocomplete &&
+    const autocompleteWordlist = async (
+      userInput: string
+    ): Promise<Array<Items> | undefined> => {
+      const allItems: Array<Items> = [];
+      for (let word of this.wordlistattr) {
+        if (word.length === 0) return;
+        const wordList = await getWordsList({
+          corpname: client.corpname,
+          wlattr: word,
+          wlmaxitems: 100,
           // @ts-ignore
-          e.target!.value.length >= this.minQueryLength
-        ) {
-          var allItems: Array<Items> = [];
-          for (let word of this.wordlistattr) {
-            if (word.length === 0) return;
-            const wordList = await getWordsList({
-              corpname: client.corpname,
-              wlattr: word,
-              wlmaxitems: 100,
-              // @ts-ignore
-              wlpat: `.*${e.target!.value}.*`,
-              wltype: "simple",
-              includeNonwords: 1,
-              wlicase: 1,
-              wlminfreq: 0,
-            });
-            if (debug && wordList !== null) console.log(wordList);
-            let items = getItems(wordList, word);
-            allItems.push(...items);
-          }
-          setTimeout(() => {
-            // @ts-ignore
-            itemsToHTML(
-              allItems,
-              searchInput.id,
-              autocompleteOptions || this.autocompleteOptions
-            );
-          }, 400);
-        } else {
-          return;
-        }
-      } else {
-        // @ts-ignore
-        const query = e.target!.value;
-        if (query.length >= this.minQueryLength) {
-          const line = await getCorpus(query, {
-            corpname: client.corpname,
-            viewmode: client.viewmode || this.viewmode,
-            attrs: client.attrs || this.attrs,
-            format: client.format || this.format,
-            structs: client.structs || this.structs,
-            kwicrightctx: client.kwicrightctx || this.kwicrightctx,
-            kwicleftctx: client.kwicleftctx || this.kwicleftctx,
-            refs: client.refs || this.refs,
-            pagesize: client.pagesize || this.pagesize,
-            fromp: client.fromp || this.fromp,
-            selectQueryId: `${searchInput?.id}-select`,
-          });
-          if (debug && line !== null) console.log(line);
-          await this.transformResponse(
-            line,
-            client,
-            hits,
-            pagination,
-            config!,
-            stats!
-          );
-          await this.createPagination(
-            1,
-            client,
-            hits,
-            pagination,
-            searchInput.id,
-            config!,
-            stats!
-          );
+          wlpat: `.*${userInput}.*`,
+          wltype: "simple",
+          includeNonwords: 1,
+          wlicase: 1,
+          wlminfreq: 0,
+        });
+        if (debug && wordList !== null) console.log(wordList);
+        if (wordList !== null) {
+          let items = getItems(wordList, word);
+          allItems.push(...items);
         }
       }
-    });
+      return allItems;
+    };
 
-    input!.addEventListener("focus", async () => {
-      setTimeout(() => {
-        document
-          .getElementById(autocompleteOptions!.id || "noske-autocomplete")
-          ?.remove();
-      }, 200);
-    });
+    const clearAutocomplete = (): void => {
+      document
+        .getElementById(autocompleteOptions!.id || "noske-autocomplete")
+        ?.remove();
+    };
 
-    searchButton!.addEventListener("click", async () => {
-      // @ts-ignore
-      const query = input!.value;
-      if (query.length >= this.minQueryLength) {
-        const line = await getCorpus(query, {
+    const autocompleteFocus = (): void => {
+      input!.addEventListener("focus", (e) => {
+        e.preventDefault();
+        clearAutocomplete();
+      });
+    };
+
+    const autocomplete = (): void => {
+      if (this.autocomplete === false) {
+        return;
+      }
+      input!.addEventListener(
+        "input",
+        debounce(async (e) => {
+          // @ts-ignore
+          const userInput: string = e.target!.value;
+          if (userInput.length >= this.minQueryLength) {
+            const allItems = await autocompleteWordlist(userInput);
+            if (allItems !== undefined) {
+              itemsToHTML(
+                allItems,
+                searchInput.id,
+                autocompleteOptions || this.autocompleteOptions
+              );
+              autocompleteFocus();
+            }
+          } else {
+            clearAutocomplete();
+          }
+        }, 175)
+      );
+    };
+
+    const searchQuery = async (userInput: string): Promise<void> => {
+      if (userInput.length >= this.minQueryLength) {
+        const line = await getCorpus(userInput, {
           corpname: client.corpname,
           viewmode: client.viewmode || this.viewmode,
           attrs: client.attrs || this.attrs,
@@ -352,14 +334,23 @@ export class NoskeSearch {
           stats!
         );
       }
-      setTimeout(() => {
-        document
-          .getElementById(autocompleteOptions!.id || "noske-autocomplete")
-          ?.remove();
-      }, 200);
-    });
+    };
 
-    (async () => {
+    const searchEnter = (): void => {
+      input!.addEventListener(
+        "keydown",
+        debounce(async (e) => {
+          if (e.key === "Enter") {
+            // @ts-ignore
+            const query = e.target!.value;
+            searchQuery(query);
+            clearAutocomplete();
+          }
+        }, 100)
+      );
+    };
+
+    const onloadSearch = async (): Promise<void> => {
       const url = new URL(window.location.href);
       const query = url.searchParams.get("q");
       if (query) {
@@ -410,7 +401,26 @@ export class NoskeSearch {
           stats!
         );
       }
-    })();
+    };
+
+    const searchClick = (): void => {
+      searchButton!.addEventListener(
+        "click",
+        debounce(() => {
+          const input = document.querySelector<HTMLInputElement>(
+            `input#${searchInput?.id}-input`
+          );
+          const query = input!.value;
+          searchQuery(query);
+          clearAutocomplete();
+        }, 100)
+      );
+    };
+
+    onloadSearch();
+    autocomplete();
+    searchEnter();
+    searchClick();
   }
 
   private searchHits({ id, css }: Hits): void {
