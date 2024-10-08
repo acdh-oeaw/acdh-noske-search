@@ -7,6 +7,7 @@ import type {
   URLCallback,
   CustomSynopticView,
   LineIds,
+  AutocompleteOptions,
 } from "../index";
 
 export type Lines = {
@@ -22,15 +23,6 @@ type Items = {
   relfreq: number;
   str: string;
   attr: string;
-};
-
-type AutocompleteOptions = {
-  id: string;
-  css: {
-    div: string;
-    ul: string;
-    li: string;
-  };
 };
 
 type Options = {
@@ -187,17 +179,17 @@ export function itemsToHTML(
   items: Array<Items>,
   containerId: string,
   autocompleteOptions: AutocompleteOptions
-) {
+): void {
   document.getElementById(autocompleteOptions.id)?.remove();
   const container = document.querySelector<HTMLDivElement>(`#${containerId}`);
   let div = document.createElement("div");
   div.id = autocompleteOptions.id;
-  div.classList.add(...autocompleteOptions.css.div.split(" "));
+  div.classList.add(...autocompleteOptions.css!.div.split(" "));
   let ul = document.createElement("ul");
-  ul.classList.add(...autocompleteOptions.css.ul.split(" "));
+  ul.classList.add(...autocompleteOptions.css!.ul.split(" "));
   items.map((item) => {
     let li = document.createElement("li");
-    li.classList.add(...autocompleteOptions.css.li.split(" "));
+    li.classList.add(...autocompleteOptions.css!.li.split(" "));
     li.innerHTML = item.str! + " | " + item.frq! + " | " + item.attr!;
     li.addEventListener("click", () => {
       // @ts-ignore
@@ -220,7 +212,7 @@ export function itemsToHTML(
   container?.prepend(div);
 }
 
-export function getStats(response: _concordance) {
+export function getStats(response: _concordance): _concordance["fullsize"] {
   const stats = response.fullsize;
   return stats;
 }
@@ -277,7 +269,7 @@ export function responseToHTML(
   customUrlTransform: URLCallback | false = false,
   customSynopticView: CustomSynopticView | false = false,
   hits: Hits
-) {
+): void {
   const hitsContainer = document.querySelector<HTMLDivElement>(
     `#${containerId}`
   );
@@ -313,7 +305,7 @@ export function responseToHTML(
         ? customUrl
         : customUrl + "/";
       let refsHeader = refs!
-        .filter((ref) => ref.length > 0 && !ref.startsWith("doc"))
+        .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
         .map(
           (ref) =>
             `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`
@@ -321,7 +313,7 @@ export function responseToHTML(
         .join("");
       tableHeaderGeneric = refsHeader;
       let refsColumn = refs!
-        .filter((ref) => ref.length > 0 && !ref.startsWith("doc"))
+        .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
         .map(
           (ref) =>
             `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`

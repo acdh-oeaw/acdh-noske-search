@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@acdh-oeaw/lib':
+        specifier: ^0.1.12
+        version: 0.1.12
     devDependencies:
       '@acdh-oeaw/prettier-config':
         specifier: ^2.0.0
@@ -37,6 +41,10 @@ importers:
         version: 5.4.8
 
 packages:
+
+  '@acdh-oeaw/lib@0.1.12':
+    resolution: {integrity: sha512-yNAjUxcoqvEXX+YsqWqOqCOJeFg6oYL2Q+bVdhu6LEQU1MGpcMbo7haSTX12X8UYZjIU6oWpHrZfdKZZxRH23Q==}
+    engines: {node: '>=20', pnpm: '>=9'}
 
   '@acdh-oeaw/prettier-config@2.0.0':
     resolution: {integrity: sha512-PhjHkJRb5K5uWMZ6s6IzNLvBns4Ei+osR6g/XmItFb0B844VOsU6iO3DbRyrHo8zTpMzsftkxVxT9S/b3KVmtQ==}
@@ -1226,6 +1234,8 @@ packages:
     hasBin: true
 
 snapshots:
+
+  '@acdh-oeaw/lib@0.1.12': {}
 
   '@acdh-oeaw/prettier-config@2.0.0(prettier@3.3.3)':
     dependencies:
