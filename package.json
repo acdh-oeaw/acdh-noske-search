@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "vite",
+    "dev": "pnpm tailwindcss -i ./src/input.css -o ./src/style.css && vite",
     "build-vite": "tsc && vite build",
     "preview": "vite preview"
   },

@@ -17,11 +17,19 @@ type Config = {
   urlparam?: URLParams;
   customUrlTransform?: URLCallback;
   customSynopticView?: CustomSynopticView;
+  customResponseHtml?: CustomResponseHtml;
 };
 
 export type LineIds = {
   [key: string]: Lines;
 };
+
+export type CustomResponseHtml = (
+  lines: Array<Lines>,
+  containerId: string,
+  hits: Hits,
+  client_attr: Array<string>
+) => void;
 
 export type CustomSynopticView = (lineIds: LineIds) => void;
 
@@ -509,8 +517,9 @@ export class NoskeSearch {
         `${hits.id}-init`,
         config?.customUrl || this.customUrl,
         config?.urlparam || this.urlparam,
-        config?.customUrlTransform || false,
-        config?.customSynopticView || false,
+        config?.customUrlTransform,
+        config?.customSynopticView,
+        config?.customResponseHtml,
         hits!
       );
       if (stats) {
