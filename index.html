@@ -4,17 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="./src/style.css" rel="stylesheet">
+    <link href="./src/style.css" rel="stylesheet" />
     <title>NoSke Search Interface</title>
   </head>
   <body>
-    
-    <div id="noske-search"></div>
-    <div id="hitsbox-test"></div>
-    <div class="flex self-center">
-      <div id="noske-pagination-test"></div>
-      <div id="noske-stats"></div>
+    <div class="grid grid-cols-2">
+      <div>
+        <div id="noske-search"></div>
+        <div id="hitsbox-test"></div>
+        <div class="mx-auto grid grid-cols-2">
+          <div id="noske-pagination-test"></div>
+          <div id="noske-stats"></div>
+        </div>
+      </div>
+      <div id="noske-synoptic-view"></div>
     </div>
+
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

@@ -1,5 +1,7 @@
 import "./style.css";
+import "../dist/index.d.ts";
 import { NoskeSearch } from "../index";
+import { loadContent } from "./lib.ts";
 
 const search = new NoskeSearch({
   container: "noske-search",
@@ -12,7 +14,7 @@ search.minQueryLength = 2;
 search.search({
   debug: true,
   client: {
-    base: "http://localhost:8080",
+    base: "https://abacus-noske.acdh-dev.oeaw.ac.at",
     corpname: "abacus",
     attrs: "word,id,title",
     structs: "doc",
@@ -38,10 +40,36 @@ search.search({
       button: "p-2 border border-gray-500",
     },
   },
-  // config: {
-  //   customUrl: "https://wiener-diarium.github.io/curved-conjunction/edition",
-  //   urlparam: "&img=on",
-  // },
+  config: {
+    customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition",
+    urlparam: { img: "on" },
+    customUrlTransform: (lines) => {
+      // let left = lines.left;
+      // let right = lines.right;
+      // let kwic = lines.kwic;
+      let kwic_attr = lines.kwic_attr?.split("/")[1];
+      let refs = lines.refs;
+      let docID = refs[0].split("=")[1];
+      let url = new URL(
+        "https://abacus.acdh-ch-dev.oeaw.ac.at/edition" + docID
+      );
+      url.hash = kwic_attr!;
+      url.searchParams.set("img", "on");
+      url.searchParams.set("place", "on");
+      return url;
+    },
+    customSynopticView: (resultLineId) => {
+      console.log(resultLineId);
+      // const synopticView = document.getElementById("noske-synoptic-view");
+      Object.entries(resultLineId).forEach(([key, value]) => {
+        document.getElementById(key)?.addEventListener("click", () => {
+          let id = key.split("__")[1];
+          let hash = key.split("__")[2];
+          loadContent(id, "noske-synoptic-view", hash);
+        });
+      });
+    },
+  },
   stats: {
     id: "noske-stats",
   },
