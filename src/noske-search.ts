@@ -8,6 +8,7 @@ import type {
   CustomSynopticView,
   LineIds,
   AutocompleteOptions,
+  CustomResponseHtml,
 } from "../index";
 
 export type Lines = {
@@ -268,8 +269,13 @@ export function responseToHTML(
   urlparam: URLParams = false,
   customUrlTransform: URLCallback | false = false,
   customSynopticView: CustomSynopticView | false = false,
+  customResponseHtml: CustomResponseHtml | false = false,
   hits: Hits
 ): void {
+  if (customResponseHtml) {
+    customResponseHtml(lines, containerId, hits, client_attrs);
+    return;
+  }
   const hitsContainer = document.querySelector<HTMLDivElement>(
     `#${containerId}`
   );
@@ -301,9 +307,12 @@ export function responseToHTML(
       let refs = line.refs;
       let docId = checkRefs(refs, true);
       let refsNorm = checkRefs(refs, false);
-      let customUrlNormalized = customUrl.endsWith("/")
-        ? customUrl
-        : customUrl + "/";
+      let customUrlExists = customUrl.length > 0 ? true : false;
+      let customUrlNormalized =
+        customUrlExists && customUrl.endsWith("/")
+          ? customUrl
+          : customUrl + "/";
+      let customUrlTransformExists = customUrlExists ? customUrlNormalized : "";
       let refsHeader = refs!
         .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
         .map(
@@ -347,11 +356,21 @@ export function responseToHTML(
           console.log("id attribute is not present in the client attributes");
           id = "";
         }
-        if (customUrlNormalized.startsWith("http")) {
+        if (
+          customUrlTransformExists &&
+          customUrlTransformExists.startsWith("http")
+        ) {
           var url = new URL(customUrlNormalized + docId);
-        } else {
+        } else if (
+          customUrlTransformExists &&
+          !customUrlTransformExists.startsWith("http")
+        ) {
           var url = new URL(
             window.location.origin + customUrlNormalized + docId
+          );
+        } else {
+          var url = new URL(
+            window.location.origin + window.location.pathname + docId
           );
         }
         if (typeof urlparam === "object") {
