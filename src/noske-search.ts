@@ -176,16 +176,54 @@ export function getItems(response: _wordlist, attr: string) {
   return items;
 }
 
+export function initAutocomplete(
+  containerId: string,
+  autocompleteOptions: AutocompleteOptions
+): boolean {
+  const autoContainer = document.querySelector<HTMLDivElement>(
+    `#${autocompleteOptions.id}`
+  );
+  if (autoContainer) {
+    autoContainer.remove();
+  }
+  const inputContainer = document.querySelector<HTMLDivElement>(
+    `#${containerId}`
+  );
+  let div = document.createElement("div");
+  div.id = autocompleteOptions.id;
+  div.classList.add(...autocompleteOptions.css!.div.split(" "));
+  div.style.minWidth = "250px";
+  div.style.minHeight = "50px";
+  inputContainer?.prepend(div);
+  const loader = document.createElement("div");
+  loader.classList.add(...autocompleteOptions.css!.loader.split(" "));
+  loader.classList.add("loader");
+  div.appendChild(loader);
+  const rollingKeyframes = new KeyframeEffect(
+    loader,
+    [
+      { transform: "rotate(0deg)" }, // keyframe
+      { transform: "rotate(1080deg)" }, // keyframe
+    ],
+    {
+      // keyframe options
+      duration: 3000,
+      direction: "alternate",
+      easing: "linear",
+      iterations: 1000,
+    }
+  );
+  const rotateAnimation = new Animation(rollingKeyframes, document.timeline);
+  rotateAnimation.play();
+  return true;
+}
+
 export function itemsToHTML(
   items: Array<Items>,
   containerId: string,
   autocompleteOptions: AutocompleteOptions
 ): void {
-  document.getElementById(autocompleteOptions.id)?.remove();
-  const container = document.querySelector<HTMLDivElement>(`#${containerId}`);
-  let div = document.createElement("div");
-  div.id = autocompleteOptions.id;
-  div.classList.add(...autocompleteOptions.css!.div.split(" "));
+  const container = document.getElementById(autocompleteOptions.id);
   let ul = document.createElement("ul");
   ul.classList.add(...autocompleteOptions.css!.ul.split(" "));
   items.map((item) => {
@@ -209,8 +247,8 @@ export function itemsToHTML(
     });
     ul.appendChild(li);
   });
-  div.appendChild(ul);
-  container?.prepend(div);
+  container?.appendChild(ul);
+  document.querySelector(".loader")?.remove();
 }
 
 export function getStats(response: _concordance): _concordance["fullsize"] {
@@ -267,6 +305,7 @@ export function responseToHTML(
   containerId: string,
   customUrl: string,
   urlparam: URLParams = false,
+  tableView: boolean = true,
   customUrlTransform: URLCallback | false = false,
   customSynopticView: CustomSynopticView | false = false,
   customResponseHtml: CustomResponseHtml | false = false,
@@ -279,7 +318,8 @@ export function responseToHTML(
   const hitsContainer = document.querySelector<HTMLDivElement>(
     `#${containerId}`
   );
-  hitsContainer!.innerHTML = `
+  if (tableView) {
+    hitsContainer!.innerHTML = `
 		<div class="${hits.css?.div || hitsCss.div}">
 			<table class="${hits.css?.table || hitsCss.table}">
 				<thead class="${hits.css?.thead || hitsCss.thead}">
@@ -291,12 +331,14 @@ export function responseToHTML(
 			</table>
 		</div>
 		`;
-  const hitsBody =
-    document.querySelector<HTMLTableSectionElement>("#hits-table-body");
-  var tableHeaderStatic = `<th class="${hits.css?.th || hitsCss.th}">Left KWIC</th>
+    var hitsBody =
+      document.querySelector<HTMLTableSectionElement>("#hits-table-body");
+    var tableHeaderStatic = `<th class="${hits.css?.th || hitsCss.th}">Left KWIC</th>
 							<th class="${hits.css?.th || hitsCss.th}">Context</th>
 							<th class="${hits.css?.th || hitsCss.th}">Right KWIC</th>`;
-  var tableHeaderGeneric = "";
+    var tableHeaderGeneric = "";
+  }
+
   var lineIds: LineIds = {};
   const results = lines
     .map((line, idx) => {
@@ -313,35 +355,51 @@ export function responseToHTML(
           ? customUrl
           : customUrl + "/";
       let customUrlTransformExists = customUrlExists ? customUrlNormalized : "";
-      let refsHeader = refs!
-        .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
-        .map(
-          (ref) =>
-            `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`
-        )
-        .join("");
-      tableHeaderGeneric = refsHeader;
-      let refsColumn = refs!
-        .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
-        .map(
-          (ref) =>
-            `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`
-        )
-        .join("");
-      /*
+      if (tableView) {
+        var refsHeader = refs!
+          .filter((ref) => ref.length > 0 && ref.includes("title"))
+          .map(
+            (ref) =>
+              `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`
+          )
+          .join("");
+        tableHeaderGeneric = refsHeader;
+        var refsColumn = refs!
+          .filter((ref) => ref.length > 0 && ref.includes("title"))
+          .map(
+            (ref) =>
+              `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`
+          )
+          .join("");
+        /*
         Checks if the customUrlTransform callback is provided and uses it to transform the url
         Otherwise, it uses the default logic to transform the url
         customUrlTransform: (line: Lines) => URL returns a URL object
       */
-      var id: string | boolean = false;
+      } else {
+        var refsHeader = refs!
+          .filter((ref) => ref.length > 0 && ref.includes("title"))
+          .map((ref) => `<span>${ref.split("=")[1]}</span><br>`)
+          .join("");
+      }
+      let id: string = "";
+      let pbId: string = "";
       if (customSynopticView) {
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
+          var id_idx = client_attrs.indexOf("pbId");
+          pbId = kwic_attr![id_idx];
         }
         var lineId = "line-" + idx + "__" + docId + "__" + id;
         lineIds[lineId] = line;
       } else if (customUrlTransform) {
+        if (client_attrs) {
+          var id_idx = client_attrs.indexOf("id");
+          id = kwic_attr![id_idx];
+          var id_idx = client_attrs.indexOf("pbId");
+          pbId = kwic_attr![id_idx];
+        }
         var url: URL = customUrlTransform(line);
       } else {
         let hashId = refsNorm!
@@ -351,6 +409,8 @@ export function responseToHTML(
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
+          var id_idx = client_attrs.indexOf("pbId");
+          pbId = kwic_attr![id_idx];
         }
         if (!id) {
           console.log("id attribute is not present in the client attributes");
@@ -379,14 +439,17 @@ export function responseToHTML(
           }
         }
         if (id) {
+          console.log(id);
           url.hash = id;
         } else {
+          console.log(hashId);
           url.hash = hashId;
         }
       }
-      return `
+      if (tableView) {
+        return `
 			<tr class="${hits.css?.trBody || hitsCss.trBody}">
-				${refsColumn}
+				${refsColumn!}
 				<td class="${hits.css?.left || hitsCss.left}">${left}</td>
 				<td class="${hits.css?.kwic || hitsCss.kwic}" ${lineId! ? `id="${lineId}"` : ""}>
          ${
@@ -400,12 +463,30 @@ export function responseToHTML(
 				<td class="${hits.css?.right || hitsCss.right}">${right}</td>
 			</tr>
 			`;
+      } else {
+        return `
+          <div class="p-4 border rounded-md" ${lineId! ? `id="${lineId}"` : ""}>
+          ${
+            customSynopticView
+              ? `<span>${left}</span><span class="text-red-500">${kwic} </span><span>${right}</span>`
+              : `<a href="${url!}">
+                  <span>${left}</span><span class="text-red-500">${kwic} </span><span>${right}</span>
+                </a>`
+          } 
+          <small class="${hits.css?.td || hitsCss.td} align-bottom"><br>${refsHeader} S. ${pbId}</small>
+          </div>
+          `;
+      }
     })
     .join("");
-  const tableHeader = tableHeaderGeneric + tableHeaderStatic;
-  const hitsHeader =
-    document.querySelector<HTMLTableSectionElement>("#hits-header-row");
-  hitsHeader!.innerHTML = tableHeader;
-  hitsBody!.innerHTML = results;
+  if (tableView) {
+    const tableHeader = tableHeaderGeneric! + tableHeaderStatic!;
+    const hitsHeader =
+      document.querySelector<HTMLTableSectionElement>("#hits-header-row");
+    hitsHeader!.innerHTML = tableHeader;
+    hitsBody!.innerHTML = results;
+  } else {
+    hitsContainer!.innerHTML = results;
+  }
   customSynopticView ? customSynopticView(lineIds) : null;
 }

@@ -52,7 +52,7 @@ search.search({
   hits: {
     id: "hitsbox-test",
     css: {
-      div: "grid grid-cols-5",
+      div: "grid grid-cols-5 gap-4",
     },
   },
   pagination: {
@@ -70,23 +70,22 @@ search.search({
     },
   },
   config: {
-    // customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition",
+    tableView: false,
+    // customUrl: "https://abacus.acdh-ch-dev.oeaw.ac.at/edition/",
     // urlparam: { img: "on" },
-    // customUrlTransform: (lines) => {
-    //   // let left = lines.left;
-    //   // let right = lines.right;
-    //   // let kwic = lines.kwic;
-    //   let kwic_attr = lines.kwic_attr?.split("/")[1];
-    //   let refs = lines.refs;
-    //   let docID = refs[0].split("=")[1];
-    //   let url = new URL(
-    //     "https://abacus.acdh-ch-dev.oeaw.ac.at/edition" + docID
-    //   );
-    //   url.hash = kwic_attr!;
-    //   url.searchParams.set("img", "on");
-    //   url.searchParams.set("place", "on");
-    //   return url;
-    // },
+    customUrlTransform: (lines) => {
+      let kwic_attr = lines.kwic_attr?.split("/")[1];
+      let pageId = lines.kwic_attr?.split("/")[6];
+      // let refs = lines.refs;
+      // let docID = refs[0].split("=")[1];
+      let url = new URL(
+        "https://abacus.acdh-ch-dev.oeaw.ac.at/edition/" + pageId
+      );
+      url.hash = kwic_attr!;
+      url.searchParams.set("img", "on");
+      url.searchParams.set("place", "on");
+      return url;
+    },
     // customSynopticView: (resultLineId) => {
     //   console.log(resultLineId);
     //   // const synopticView = document.getElementById("noske-synoptic-view");
@@ -98,66 +97,50 @@ search.search({
     //     });
     //   });
     // },
-    customResponseHtml: (lines, containerId, hits, client_attr) => {
-      console.log(lines, containerId, hits, client_attr);
-      const hitsContainer = document.querySelector<HTMLDivElement>(
-        `#${containerId}`
-      );
-      const results = lines
-        .map((line, idx) => {
-          let left = line.left;
-          let right = line.right;
-          let kwic = line.kwic;
-          let kwic_attr = line.kwic_attr?.split("/");
-          let refs = line.refs;
-          let docId = checkRefs(refs, true);
-          let refsNorm = checkRefs(refs, false);
-          // let refsHeader = refs!
-          //   .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
-          //   .map(
-          //     (ref) => `<th class="${hits.css?.th}">${ref.split("=")[0]}</th>`
-          //   )
-          //   .join("");
-          // tableHeaderGeneric = refsHeader;
-          // let refsColumn = refs!
-          //   .filter((ref) => ref.length > 0 || !ref.startsWith("doc"))
-          //   .map(`${ref.split("=")[1]}`)
-          //   .join("");
-          /*
-            Checks if the customUrlTransform callback is provided and uses it to transform the url
-            Otherwise, it uses the default logic to transform the url
-            customUrlTransform: (line: Lines) => URL returns a URL object
-          */
-          var id: string | boolean = false;
-          let hashId = refsNorm!
-            .filter((ref) => !ref.startsWith("doc") && ref.length > 0)
-            .map((ref) => `#${ref.split("=")[1]}`)
-            .join("");
-          if (client_attr) {
-            var id_idx = client_attr.indexOf("id");
-            id = kwic_attr![id_idx];
-          }
-          if (!id) {
-            console.log("id attribute is not present in the client attributes");
-            id = "";
-          }
-          var url = new URL(window.location.origin + "/" + docId);
-          if (id) {
-            url.hash = id;
-          } else {
-            url.hash = hashId;
-          }
-          return `
-          <div class="p-4 border rounded-md m-2">
-          <a href="${url}">
-            <span>${left}</span><span class="text-red-500">${kwic}</span><span>${right}</span>
-          </a>
-          </div>
-          `;
-        })
-        .join("");
-      hitsContainer!.innerHTML = results;
-    },
+    // customResponseHtml: (lines, containerId, hits, client_attr) => {
+    //   console.log(lines, containerId, hits, client_attr);
+    //   const hitsContainer = document.querySelector<HTMLDivElement>(
+    //     `#${containerId}`
+    //   );
+    //   const results = lines
+    //     .map((line) => {
+    //       let left = line.left;
+    //       let right = line.right;
+    //       let kwic = line.kwic;
+    //       let kwic_attr = line.kwic_attr?.split("/");
+    //       let refs = line.refs;
+    //       let docId = checkRefs(refs, true);
+    //       let refsNorm = checkRefs(refs, false);
+    //       var id: string | boolean = false;
+    //       let hashId = refsNorm!
+    //         .filter((ref) => !ref.startsWith("doc") && ref.length > 0)
+    //         .map((ref) => `#${ref.split("=")[1]}`)
+    //         .join("");
+    //       if (client_attr) {
+    //         var id_idx = client_attr.indexOf("id");
+    //         id = kwic_attr![id_idx];
+    //       }
+    //       if (!id) {
+    //         console.log("id attribute is not present in the client attributes");
+    //         id = "";
+    //       }
+    //       var url = new URL(window.location.origin + "/" + docId);
+    //       if (id) {
+    //         url.hash = id;
+    //       } else {
+    //         url.hash = hashId;
+    //       }
+    //       return `
+    //       <div class="p-4 border rounded-md">
+    //       <a href="${url}">
+    //         <span>${left}</span><span class="text-red-500">${kwic}</span><span>${right}</span>
+    //       </a>
+    //       </div>
+    //       `;
+    //     })
+    //     .join("");
+    //   hitsContainer!.innerHTML = results;
+    // },
   },
   stats: {
     id: "noske-stats",
@@ -165,9 +148,11 @@ search.search({
   autocompleteOptions: {
     id: "noske-autocomplete",
     css: {
-      div: "absolute top-20 p-2 bg-white",
-      ul: "p-2 border border-gray-500",
-      li: "p-2 border border-gray-500 cursor-pointer",
+      div: "bg-white border border-gray-300 absolute ml-10 mt-10 text-left min-w-[250px] min-h-[50px]",
+      ul: "p-0",
+      li: "p-2 cursor-pointer",
+      loader:
+        "m-2 border-4 border-gray-300 border-t-4 border-t-black rounded-full relative text-center w-[40px] h-[40px]",
     },
   },
 });

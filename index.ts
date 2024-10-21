@@ -6,6 +6,7 @@ import {
   getLines,
   getStats,
   responseToHTML,
+  initAutocomplete,
 } from "./src/noske-search";
 import { OpenAPI } from "./src/client";
 import { debounce } from "@acdh-oeaw/lib";
@@ -15,6 +16,7 @@ type Config = {
   results?: string;
   customUrl?: string;
   urlparam?: URLParams;
+  tableView?: boolean;
   customUrlTransform?: URLCallback;
   customSynopticView?: CustomSynopticView;
   customResponseHtml?: CustomResponseHtml;
@@ -50,6 +52,7 @@ export type AutocompleteOptions = {
     div: string;
     ul: string;
     li: string;
+    loader: string;
   };
 };
 
@@ -160,6 +163,8 @@ export class NoskeSearch {
       div: "bg-white border border-gray-300 absolute ml-40 mt-10 text-left",
       ul: "p-0",
       li: "p-2 hover:bg-gray-100 text-sm text-gray-500 hover:cursor-pointer",
+      loader:
+        "m-2 border-4 border-gray-300 border-t-4 border-t-black rounded-full relative w-[40px] h-[40px] text-center",
     },
   };
   public minQueryLength = 2;
@@ -289,20 +294,27 @@ export class NoskeSearch {
       input!.addEventListener(
         "input",
         debounce(async (e) => {
-          // @ts-ignore
-          const userInput: string = e.target!.value;
-          if (userInput.length >= this.minQueryLength) {
-            const allItems = await autocompleteWordlist(userInput);
-            if (allItems !== undefined) {
-              itemsToHTML(
-                allItems,
-                searchInput.id,
-                autocompleteOptions || this.autocompleteOptions
-              );
-              autocompleteFocus();
+          document.getElementById(searchInput.id)?.classList.add("relative");
+          const init = initAutocomplete(
+            searchInput.id,
+            autocompleteOptions || this.autocompleteOptions
+          );
+          if (init) {
+            // @ts-ignore
+            const userInput: string = e.target!.value;
+            if (userInput.length >= this.minQueryLength) {
+              const allItems = await autocompleteWordlist(userInput);
+              if (allItems !== undefined) {
+                itemsToHTML(
+                  allItems,
+                  searchInput.id,
+                  autocompleteOptions || this.autocompleteOptions
+                );
+                autocompleteFocus();
+              }
+            } else {
+              clearAutocomplete();
             }
-          } else {
-            clearAutocomplete();
           }
         }, 175)
       );
@@ -517,6 +529,7 @@ export class NoskeSearch {
         `${hits.id}-init`,
         config?.customUrl || this.customUrl,
         config?.urlparam || this.urlparam,
+        config?.tableView,
         config?.customUrlTransform,
         config?.customSynopticView,
         config?.customResponseHtml,

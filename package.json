@@ -1,6 +1,6 @@
 {
   "name": "acdh-noske-search",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "type": "module",
   "main": "./dist/index.global.js",
   "module": "./dist/index.js",
@@ -16,10 +16,10 @@
     "index.ts"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "pnpm tailwindcss -i ./src/input.css -o ./src/style.css && tsup",
     "dev": "pnpm tailwindcss -i ./src/input.css -o ./src/style.css && vite",
     "build-vite": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "pnpm tailwindcss -i ./src/input.css -o ./src/style.css && vite preview"
   },
   "devDependencies": {
     "@acdh-oeaw/prettier-config": "^2.0.0",
