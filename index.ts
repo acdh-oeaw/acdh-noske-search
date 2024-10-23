@@ -101,7 +101,7 @@ export type Hits = {
   css?: {
     div?: string;
     table?: string;
-    thead?: string;
+    head?: string;
     trHead?: string;
     th?: string;
     tbody?: string;
@@ -110,6 +110,7 @@ export type Hits = {
     kwic?: string;
     left?: string;
     right?: string;
+    item?: string;
   };
 };
 
@@ -169,6 +170,7 @@ export class NoskeSearch {
   };
   public minQueryLength = 2;
   public autocomplete = false;
+  public getWordsList = getWordsList;
 
   constructor(options?: Options) {
     if (!options?.container)
@@ -433,7 +435,7 @@ export class NoskeSearch {
           const query = input!.value;
           searchQuery(query);
           clearAutocomplete();
-        }, 100)
+        }, 175)
       );
     };
 

@@ -156,3 +156,21 @@ search.search({
     },
   },
 });
+
+const wordList = await search.getWordsList({
+  corpname: "abacus",
+  wlattr: "lemma",
+  wlmaxitems: 50,
+  // wlpat: `a.*`,
+  wltype: "simple",
+  includeNonwords: 0,
+  wlicase: 1,
+  wlminfreq: 1,
+  wlsort: "frq",
+});
+
+Object.entries(wordList).forEach(([key, value]) => {
+  console.log(key, value);
+});
+
+console.log(wordList);

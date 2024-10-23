@@ -50,6 +50,7 @@ type wlQuery = {
   wltype?: "simple" | "struct_wordlist";
   wlicase?: 0 | 1 | undefined;
   wlminfreq?: number;
+  wlsort?: "frq" | "docf" | undefined;
 };
 
 OpenAPI.interceptors.response.use((response) => {
@@ -86,6 +87,7 @@ export async function getWordsList(options: wlQuery) {
     includeNonwords: options.includeNonwords,
     wlicase: options.wlicase,
     wlminfreq: options.wlminfreq,
+    wlsort: options.wlsort,
   });
   return response;
 }
@@ -288,7 +290,7 @@ function checkRefs(
 const hitsCss = {
   div: "overflow-x-auto",
   table: "table",
-  thead: "text-center",
+  head: "text-center",
   trHead: "",
   th: "text-sm text-gray-500",
   tbody: "",
@@ -297,6 +299,7 @@ const hitsCss = {
   kwic: "text-lg text-red-500",
   left: "text-sm text-gray-500 p-2 text-right",
   right: "text-sm text-gray-500 p-2 text-left",
+  item: "p-4 border rounded-md",
 };
 
 export function responseToHTML(
@@ -322,7 +325,7 @@ export function responseToHTML(
     hitsContainer!.innerHTML = `
 		<div class="${hits.css?.div || hitsCss.div}">
 			<table class="${hits.css?.table || hitsCss.table}">
-				<thead class="${hits.css?.thead || hitsCss.thead}">
+				<thead class="${hits.css?.head || hitsCss.head}">
 				<tr class="${hits.css?.trHead || hitsCss.trHead}" id="hits-header-row">
 				</tr>
 				</thead>
@@ -383,13 +386,13 @@ export function responseToHTML(
           .join("");
       }
       let id: string = "";
-      let pbId: string = "";
+      // let pbId: string = "";
       if (customSynopticView) {
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
-          var id_idx = client_attrs.indexOf("pbId");
-          pbId = kwic_attr![id_idx];
+          // var id_idx = client_attrs.indexOf("pbId");
+          // pbId = kwic_attr![id_idx];
         }
         var lineId = "line-" + idx + "__" + docId + "__" + id;
         lineIds[lineId] = line;
@@ -397,8 +400,8 @@ export function responseToHTML(
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
-          var id_idx = client_attrs.indexOf("pbId");
-          pbId = kwic_attr![id_idx];
+          // var id_idx = client_attrs.indexOf("pbId");
+          // pbId = kwic_attr![id_idx];
         }
         var url: URL = customUrlTransform(line);
       } else {
@@ -409,8 +412,8 @@ export function responseToHTML(
         if (client_attrs) {
           var id_idx = client_attrs.indexOf("id");
           id = kwic_attr![id_idx];
-          var id_idx = client_attrs.indexOf("pbId");
-          pbId = kwic_attr![id_idx];
+          // var id_idx = client_attrs.indexOf("pbId");
+          // pbId = kwic_attr![id_idx];
         }
         if (!id) {
           console.log("id attribute is not present in the client attributes");
@@ -465,15 +468,15 @@ export function responseToHTML(
 			`;
       } else {
         return `
-          <div class="p-4 border rounded-md" ${lineId! ? `id="${lineId}"` : ""}>
+          <div class="${hits.css?.item || hitsCss.item}" ${lineId! ? `id="${lineId}"` : ""}>
           ${
             customSynopticView
-              ? `<span>${left}</span><span class="text-red-500">${kwic} </span><span>${right}</span>`
+              ? `<span>${left}</span><span class="${hits.css?.kwic || hitsCss.kwic}">${kwic} </span><span>${right}</span>`
               : `<a href="${url!}">
-                  <span>${left}</span><span class="text-red-500">${kwic} </span><span>${right}</span>
+                  <span>${left}</span><span class="${hits.css?.kwic || hitsCss.kwic}">${kwic} </span><span>${right}</span>
                 </a>`
           } 
-          <small class="${hits.css?.td || hitsCss.td} align-bottom"><br>${refsHeader} S. ${pbId}</small>
+          <small class="${hits.css?.head || hitsCss.head} align-bottom"><br>${refsHeader}</small>
           </div>
           `;
       }
