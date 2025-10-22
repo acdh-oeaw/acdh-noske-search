@@ -3,12 +3,13 @@ import {
   getItems,
   itemsToHTML,
   getCorpus,
+  getCorpusStats,
   getLines,
   getStats,
   responseToHTML,
   initAutocomplete,
 } from "@/noske-search";
-import { OpenAPI } from "@/client";
+import { _concordance, OpenAPI } from "@/client";
 import { debounce } from "@acdh-oeaw/lib";
 import type { Lines } from "@/noske-search.ts";
 
@@ -25,6 +26,13 @@ type Config = {
 export type LineIds = {
   [key: string]: Lines;
 };
+
+export type CustomQueryStats = (
+  query: string,
+  lines: Array<Lines>,
+  pagesize?: number,
+  containerId?: string
+) => void;
 
 export type CustomResponseHtml = (
   lines: Array<Lines>,
@@ -117,6 +125,7 @@ export type Hits = {
 
 type Stats = {
   id: string;
+  customQueryStats?: CustomQueryStats;
   label?: string;
   css?: {
     div?: string;
@@ -384,13 +393,25 @@ export class NoskeSearch {
           config!,
           stats!
         );
+        if (stats.customQueryStats) {
+          const hitsContainer = `${hits.id}-init`;
+          const pagesize =
+            line && line !== "No results found" ? line.fullsize : 999999;
+          const statsLine = await searchQueryStats(userInput, pagesize);
+          stats.customQueryStats(
+            userInput,
+            getLines(statsLine),
+            pagesize,
+            hitsContainer
+          );
+        }
       }
     };
 
     const searchEnter = (): void => {
       input!.addEventListener(
         "keydown",
-        debounce(async (e) => {
+        debounce((e) => {
           // @ts-ignore
           if (e.key === "Enter") {
             // @ts-ignore
@@ -398,7 +419,7 @@ export class NoskeSearch {
             searchQuery(query);
             clearAutocomplete();
           }
-        }, 100)
+        }, 250)
       );
     };
 
@@ -452,7 +473,45 @@ export class NoskeSearch {
           config!,
           stats!
         );
+        if (stats.customQueryStats) {
+          const hitsContainer = `${hits.id}-init`;
+          const pagesize =
+            line && line !== "No results found" ? line.fullsize : 999999;
+          const statsLine = await searchQueryStats(input!.value, pagesize);
+          stats.customQueryStats(
+            input!.value,
+            getLines(statsLine),
+            pagesize,
+            hitsContainer
+          );
+        }
       }
+    };
+
+    const searchQueryStats = async (
+      userInput: string,
+      pagesize: number = 999999
+    ): Promise<_concordance> => {
+      if (userInput.length >= this.minQueryLength) {
+        const line = await getCorpusStats(userInput, {
+          corpname: client.corpname,
+          viewmode: client.viewmode || this.viewmode,
+          attrs: client.attrs || this.attrs,
+          format: client.format || this.format,
+          structs: client.structs || this.structs,
+          kwicrightctx: client.kwicrightctx || this.kwicrightctx,
+          kwicleftctx: client.kwicleftctx || this.kwicleftctx,
+          refs: client.refs || this.refs,
+          pagesize: pagesize,
+          fromp: client.fromp || this.fromp,
+          selectQueryId: `${searchInput?.id}-select`,
+        });
+        if (debug && line !== null) console.log(line);
+        return line;
+      }
+      throw new Error(
+        `Query length is less than minimum length of: ${this.minQueryLength}`
+      );
     };
 
     const searchClick = (): void => {
@@ -465,7 +524,7 @@ export class NoskeSearch {
           const query = input!.value;
           searchQuery(query);
           clearAutocomplete();
-        }, 175)
+        }, 250)
       );
     };
 
@@ -513,16 +572,12 @@ export class NoskeSearch {
     `;
   }
 
-  private transformStats(
-    options: { id: string; css: { div: string; label: string } },
-    stats: number,
-    label: string
-  ): void {
+  private transformStats(options: Stats, stats: number, label: string): void {
     const statsContainer = document.querySelector<HTMLDivElement>(
       `#${options.id}`
     );
-    const html = `<div id="${options.id}-init" class="${options.css.div}">
-                    <label class="${options.css.label}">${label} ${stats}</label>
+    const html = `<div id="${options.id}-init" class="${options.css?.div}">
+                    <label class="${options.css?.label}">${label} ${stats}</label>
                   </div>`;
     statsContainer!.innerHTML = html;
   }

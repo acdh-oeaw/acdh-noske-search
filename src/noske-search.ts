@@ -141,6 +141,33 @@ export async function getCorpus(query: string, options: Options) {
   return response;
 }
 
+export async function getCorpusStats(query: string, options: Options) {
+  const queryType = document.querySelector<HTMLSelectElement>(
+    `#${options.selectQueryId}`
+  );
+  const queryTypeValue = options.urlparam ? "url" : queryType!.value;
+  var handledQuery =
+    queryTypeValue === "simple"
+      ? wrapQuery(query)
+      : queryTypeValue === "url"
+        ? query
+        : `q${query}`;
+  const response = await CorpusSearchService.getConcordance({
+    corpname: options.corpname,
+    q: handledQuery,
+    viewmode: options.viewmode,
+    attrs: options.attrs,
+    format: options.format,
+    structs: options.structs,
+    kwicrightctx: options.kwicrightctx,
+    kwicleftctx: options.kwicleftctx,
+    refs: options.refs,
+    pagesize: options.pagesize,
+    fromp: options.fromp,
+  });
+  return response;
+}
+
 export function getLines(response: _concordance) {
   const lines: Array<Lines> = [];
   response.Lines?.map((value) => {
@@ -258,8 +285,7 @@ export function itemsToHTML(
 }
 
 export function getStats(response: _concordance): _concordance["fullsize"] {
-  const stats = response.fullsize;
-  return stats;
+  return response.fullsize;
 }
 
 function checkRefs(
