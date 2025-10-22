@@ -7,10 +7,10 @@ import {
   getStats,
   responseToHTML,
   initAutocomplete,
-} from "./src/noske-search";
-import { OpenAPI } from "./src/client";
+} from "@/noske-search";
+import { OpenAPI } from "@/client";
 import { debounce } from "@acdh-oeaw/lib";
-import type { Lines } from "./src/noske-search";
+import type { Lines } from "@/noske-search.ts";
 
 type Config = {
   results?: string;
@@ -362,6 +362,7 @@ export class NoskeSearch {
       input!.addEventListener(
         "keydown",
         debounce(async (e) => {
+          // @ts-ignore
           if (e.key === "Enter") {
             // @ts-ignore
             const query = e.target!.value;
