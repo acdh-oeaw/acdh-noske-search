@@ -41,7 +41,7 @@ const search = new NoskeSearch({
 search.minQueryLength = 2;
 
 search.search({
-  debug: true,
+  debug: false,
   client: {
     base: "https://abacus-noske.acdh-dev.oeaw.ac.at",
     corpname: "abacus",
@@ -144,6 +144,13 @@ search.search({
   },
   stats: {
     id: "noske-stats",
+    customQueryStats: async (query, lines, pagesize) => {
+      console.log(query, lines, pagesize);
+    },
+    css: {
+      div: "p-2",
+      label: "font-bold",
+    },
   },
   autocompleteOptions: {
     id: "noske-autocomplete",
@@ -158,20 +165,20 @@ search.search({
   },
 });
 
-const wordList = await search.getWordsList({
-  corpname: "abacus",
-  wlattr: "lemma",
-  wlmaxitems: 50,
-  // wlpat: `a.*`,
-  wltype: "simple",
-  includeNonwords: 0,
-  wlicase: 1,
-  wlminfreq: 1,
-  wlsort: "frq",
-});
+// const wordList = await search.getWordsList({
+//   corpname: "abacus",
+//   wlattr: "lemma",
+//   wlmaxitems: 50,
+//   // wlpat: `a.*`,
+//   wltype: "simple",
+//   includeNonwords: 0,
+//   wlicase: 1,
+//   wlminfreq: 1,
+//   wlsort: "frq",
+// });
 
-Object.entries(wordList).forEach(([key, value]) => {
-  console.log(key, value);
-});
+// Object.entries(wordList).forEach(([key, value]) => {
+//   console.log(key, value);
+// });
 
-console.log(wordList);
+// console.log(wordList);
