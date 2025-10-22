@@ -1,7 +1,12 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [
-    ],
-  })
+  plugins: [],
+  resolve: {
+    alias: {
+      "@": path.resolve("./src"),
+    },
+  },
+});

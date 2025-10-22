@@ -12,5 +12,6 @@ export default defineConfig({
   minify: true,
   esbuildOptions(options) {
     options.packages = "external";
-  }
+  },
+  tsconfig: "tsconfig.json",
 });

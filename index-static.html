@@ -15,22 +15,36 @@
       <div id="noske-stats"></div>
     </div>
     <script type="module">
-      import { NoskeSearch } from "https://cdn.jsdelivr.net/npm/acdh-noske-search@0.0.8/dist/index.js";
-      const search = new NoskeSearch({ container: "noske-search" });
+      import { NoskeSearch } from "./dist/index.js";
+      const search = new NoskeSearch({
+        container: "noske-search",
+        autocomplete: true,
+        wordlistattr: [
+          "word",
+          "lemma",
+          "pos",
+          "id",
+          "placeName",
+          "persName",
+          "pbId",
+        ],
+      });
+
+      search.minQueryLength = 2;
 
       search.search({
         debug: true,
         client: {
-          base: "https://diarium-noske.acdh-dev.oeaw.ac.at",
-          corpname: "diarium",
-          attrs: "word,id",
-          structs: "doc,docTitle,head,p,imprimatur,list",
-          refs: "doc.id,doc.corpus,docTitle.id,p.id,head.id,imprimatur.id,list.id",
+          base: "https://abacus-noske.acdh-dev.oeaw.ac.at",
+          corpname: "abacus",
+          attrs: "word,lemma,pos,id,placeName,persName,pbId",
+          structs: "doc",
+          refs: "doc.id,doc.title",
         },
         hits: {
           id: "hitsbox-test",
           css: {
-            table: "table-auto",
+            div: "grid grid-cols-5 gap-4",
           },
         },
         pagination: {
@@ -38,6 +52,15 @@
         },
         searchInput: {
           id: "noske-input",
+          placeholder:
+            "Suche nach Wörter, Phrase oder CQL-Query (Regex erlaubt)",
+          button: "Suchen",
+          css: {
+            div: "p-2",
+            input: "p-2 border border-gray-500",
+            select: "p-2 border border-gray-500",
+            button: "p-2 border border-gray-500",
+          },
         },
         config: {
           customUrl:
@@ -46,6 +69,16 @@
         },
         stats: {
           id: "noske-stats",
+        },
+        autocompleteOptions: {
+          id: "noske-autocomplete",
+          css: {
+            div: "bg-white border border-gray-300 absolute ml-10 mt-10 text-left min-w-[250px] min-h-[50px]",
+            ul: "p-0",
+            li: "p-2 cursor-pointer",
+            loader:
+              "m-2 border-4 border-gray-300 border-t-4 border-t-black rounded-full relative text-center w-[40px] h-[40px]",
+          },
         },
       });
     </script>
