@@ -48,6 +48,7 @@ type Items = {
 
 export type AutocompleteOptions = {
   id: string;
+  regexType?: "startsWith" | "contains" | "endsWith";
   css?: {
     div: string;
     ul: string;
@@ -135,7 +136,6 @@ export class NoskeSearch {
   private kwicrightctx = "100#";
   private kwicleftctx = "100#";
   private refs = "doc.id";
-  private pagesize = 20;
   private fromp = 1;
   private container = "noske-search";
   private inputPlaceholder =
@@ -160,6 +160,7 @@ export class NoskeSearch {
   private wordlistattr = ["word", "lemma", "type", "id"];
   private autocompleteOptions = {
     id: "noske-autocomplete",
+    regexType: "contains" as "startsWith" | "contains" | "endsWith",
     css: {
       div: "bg-white border border-gray-300 absolute ml-40 mt-10 text-left",
       ul: "p-0",
@@ -171,6 +172,7 @@ export class NoskeSearch {
   public minQueryLength = 2;
   public autocomplete = false;
   public getWordsList = getWordsList;
+  public pagesize = 20;
 
   constructor(options?: Options) {
     if (!options?.container)
@@ -225,16 +227,22 @@ export class NoskeSearch {
     autocompleteOptions?: AutocompleteOptions;
   }): void {
     console.log("search initialized");
+
     this.searchInput(searchInput);
+
     this.clearResults(hits.id, pagination.id, searchInput.id, stats.id);
+
     if (!hits.id) throw new Error("hits.id is not defined");
     this.searchHits(hits);
+
     if (!pagination.id) throw new Error("pagination.id is not defined");
     this.searchPagination(pagination);
 
     if (client.base === undefined || client.base === "")
       throw new Error("Base URL is not defined");
+
     OpenAPI.BASE = client.base;
+
     if (client.corpname === undefined || client.corpname === "")
       throw new Error("Corpus name is not defined");
 
@@ -254,20 +262,24 @@ export class NoskeSearch {
       userInput: string
     ): Promise<Array<Items> | undefined> => {
       const allItems: Array<Items> = [];
+
       for (let word of this.wordlistattr) {
         if (word.length === 0) return;
+
         const wordList = await getWordsList({
           corpname: client.corpname,
           wlattr: word,
           wlmaxitems: 100,
           // @ts-ignore
-          wlpat: `.*${userInput}.*`,
+          wlpat: userInput,
           wltype: "simple",
           includeNonwords: 1,
           wlicase: 1,
           wlminfreq: 0,
         });
+
         if (debug && wordList !== null) console.log(wordList);
+
         if (wordList !== null) {
           let items = getItems(wordList, word);
           allItems.push(...items);
@@ -289,6 +301,17 @@ export class NoskeSearch {
       });
     };
 
+    const autoCompleteRegexType = (userInput: string): string => {
+      const regexType = {
+        startsWith: (userInput = `^${userInput}.*`),
+        endsWith: (userInput = `.*${userInput}$`),
+        contains: (userInput = `.*${userInput}.*`),
+      };
+      return regexType[
+        autocompleteOptions?.regexType || this.autocompleteOptions.regexType
+      ];
+    };
+
     const autocomplete = (): void => {
       if (this.autocomplete === false) {
         return;
@@ -301,10 +324,16 @@ export class NoskeSearch {
             searchInput.id,
             autocompleteOptions || this.autocompleteOptions
           );
+
           if (init) {
             // @ts-ignore
-            const userInput: string = e.target!.value;
-            if (userInput.length >= this.minQueryLength) {
+            const query = e.target!.value;
+            const userInput: string = autoCompleteRegexType(query);
+
+            if (
+              query.length >= this.minQueryLength &&
+              query.startsWith("[") === false
+            ) {
               const allItems = await autocompleteWordlist(userInput);
               if (allItems !== undefined) {
                 itemsToHTML(
@@ -318,7 +347,7 @@ export class NoskeSearch {
               clearAutocomplete();
             }
           }
-        }, 175)
+        }, 250)
       );
     };
 

@@ -228,10 +228,12 @@ export function itemsToHTML(
   const container = document.getElementById(autocompleteOptions.id);
   let ul = document.createElement("ul");
   ul.classList.add(...autocompleteOptions.css!.ul.split(" "));
+
   items.map((item) => {
     let li = document.createElement("li");
     li.classList.add(...autocompleteOptions.css!.li.split(" "));
     li.innerHTML = item.str! + " | " + item.frq! + " | " + item.attr!;
+
     li.addEventListener("click", () => {
       // @ts-ignore
       document.getElementById(containerId + "-select")!.value = "cql";
@@ -247,8 +249,10 @@ export function itemsToHTML(
       //   }, 200);
       // });
     });
+
     ul.appendChild(li);
   });
+
   container?.appendChild(ul);
   document.querySelector(".loader")?.remove();
 }

@@ -147,6 +147,7 @@ search.search({
   },
   autocompleteOptions: {
     id: "noske-autocomplete",
+    regexType: "startsWith",
     css: {
       div: "bg-white border border-gray-300 absolute ml-10 mt-10 text-left min-w-[250px] min-h-[50px]",
       ul: "p-0",
