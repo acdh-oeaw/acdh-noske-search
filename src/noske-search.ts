@@ -94,7 +94,7 @@ export async function getWordsList(options: wlQuery) {
 
 export async function getCorpus(query: string, options: Options) {
   const queryType = document.querySelector<HTMLSelectElement>(
-    `#${options.selectQueryId}`
+    `#${options.selectQueryId}`,
   );
   const queryTypeValue = options.urlparam ? "url" : queryType!.value;
   var handledQuery =
@@ -143,7 +143,7 @@ export async function getCorpus(query: string, options: Options) {
 
 export async function getCorpusStats(query: string, options: Options) {
   const queryType = document.querySelector<HTMLSelectElement>(
-    `#${options.selectQueryId}`
+    `#${options.selectQueryId}`,
   );
   const queryTypeValue = options.urlparam ? "url" : queryType!.value;
   var handledQuery =
@@ -165,6 +165,7 @@ export async function getCorpusStats(query: string, options: Options) {
     pagesize: options.pagesize,
     fromp: options.fromp,
   });
+  console.log(response);
   return response;
 }
 
@@ -207,16 +208,16 @@ export function getItems(response: _wordlist, attr: string) {
 
 export function initAutocomplete(
   containerId: string,
-  autocompleteOptions: AutocompleteOptions
+  autocompleteOptions: AutocompleteOptions,
 ): boolean {
   const autoContainer = document.querySelector<HTMLDivElement>(
-    `#${autocompleteOptions.id}`
+    `#${autocompleteOptions.id}`,
   );
   if (autoContainer) {
     autoContainer.remove();
   }
   const inputContainer = document.querySelector<HTMLDivElement>(
-    `#${containerId}`
+    `#${containerId}`,
   );
   let div = document.createElement("div");
   div.id = autocompleteOptions.id;
@@ -240,7 +241,7 @@ export function initAutocomplete(
       direction: "alternate",
       easing: "linear",
       iterations: 1000,
-    }
+    },
   );
   const rotateAnimation = new Animation(rollingKeyframes, document.timeline);
   rotateAnimation.play();
@@ -250,7 +251,7 @@ export function initAutocomplete(
 export function itemsToHTML(
   items: Array<Items>,
   containerId: string,
-  autocompleteOptions: AutocompleteOptions
+  autocompleteOptions: AutocompleteOptions,
 ): void {
   const container = document.getElementById(autocompleteOptions.id);
   let ul = document.createElement("ul");
@@ -266,7 +267,7 @@ export function itemsToHTML(
       document.getElementById(containerId + "-select")!.value = "cql";
       // @ts-ignore
       let input = document.getElementById(
-        containerId + "-input"
+        containerId + "-input",
       ) as HTMLInputElement;
       input.value = "[" + item.attr! + '="' + item.str! + '"]';
       // @ts-ignore
@@ -290,7 +291,7 @@ export function getStats(response: _concordance): _concordance["fullsize"] {
 
 function checkRefs(
   refs: Array<string>,
-  doc: boolean = false
+  doc: boolean = false,
 ): Array<string> | null {
   if (doc) {
     for (let ref of refs) {
@@ -342,14 +343,14 @@ export function responseToHTML(
   customUrlTransform: URLCallback | false = false,
   customSynopticView: CustomSynopticView | false = false,
   customResponseHtml: CustomResponseHtml | false = false,
-  hits: Hits
+  hits: Hits,
 ): void {
   if (customResponseHtml) {
     customResponseHtml(lines, containerId, hits, client_attrs);
     return;
   }
   const hitsContainer = document.querySelector<HTMLDivElement>(
-    `#${containerId}`
+    `#${containerId}`,
   );
   if (tableView) {
     hitsContainer!.innerHTML = `
@@ -393,7 +394,7 @@ export function responseToHTML(
           .filter((ref) => ref.length > 0 && ref.includes("title"))
           .map(
             (ref) =>
-              `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`
+              `<th class="${hits.css?.th || hitsCss.th}">${ref.split("=")[0]}</th>`,
           )
           .join("");
         tableHeaderGeneric = refsHeader;
@@ -401,7 +402,7 @@ export function responseToHTML(
           .filter((ref) => ref.length > 0 && ref.includes("title"))
           .map(
             (ref) =>
-              `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`
+              `<td class="${hits.css?.td || hitsCss.td}">${ref.split("=")[1]}</td>`,
           )
           .join("");
         /*
@@ -459,11 +460,11 @@ export function responseToHTML(
           !customUrlTransformExists.startsWith("http")
         ) {
           var url = new URL(
-            window.location.origin + customUrlNormalized + docId
+            window.location.origin + customUrlNormalized + docId,
           );
         } else {
           var url = new URL(
-            window.location.origin + window.location.pathname + docId
+            window.location.origin + window.location.pathname + docId,
           );
         }
         if (typeof urlparam === "object") {

@@ -31,14 +31,14 @@ export type CustomQueryStats = (
   query: string,
   lines: Array<Lines>,
   pagesize?: number,
-  containerId?: string
+  containerId?: string,
 ) => void;
 
 export type CustomResponseHtml = (
   lines: Array<Lines>,
   containerId: string,
   hits: Hits,
-  client_attr: Array<string>
+  client_attr: Array<string>,
 ) => void;
 
 export type CustomSynopticView = (lineIds: LineIds) => void;
@@ -186,7 +186,7 @@ export class NoskeSearch {
   constructor(options?: Options) {
     if (!options?.container)
       console.log(
-        "No container defined. Default container id set to 'noske-search'."
+        "No container defined. Default container id set to 'noske-search'.",
       );
     this.autocomplete = options?.autocomplete || this.autocomplete;
     this.container = options?.container || this.container;
@@ -256,19 +256,19 @@ export class NoskeSearch {
       throw new Error("Corpus name is not defined");
 
     const queryType = document.querySelector<HTMLSelectElement>(
-      `#${searchInput?.id}-select`
+      `#${searchInput?.id}-select`,
     );
 
     const input = document.querySelector<HTMLInputElement>(
-      `input#${searchInput?.id}-input`
+      `input#${searchInput?.id}-input`,
     );
 
     const searchButton = document.querySelector<HTMLButtonElement>(
-      "button#noske-search-button"
+      "button#noske-search-button",
     );
 
     const autocompleteWordlist = async (
-      userInput: string
+      userInput: string,
     ): Promise<Array<Items> | undefined> => {
       const allItems: Array<Items> = [];
 
@@ -331,7 +331,7 @@ export class NoskeSearch {
           document.getElementById(searchInput.id)?.classList.add("relative");
           const init = initAutocomplete(
             searchInput.id,
-            autocompleteOptions || this.autocompleteOptions
+            autocompleteOptions || this.autocompleteOptions,
           );
 
           if (init) {
@@ -348,7 +348,7 @@ export class NoskeSearch {
                 itemsToHTML(
                   allItems,
                   searchInput.id,
-                  autocompleteOptions || this.autocompleteOptions
+                  autocompleteOptions || this.autocompleteOptions,
                 );
                 autocompleteFocus();
               }
@@ -356,7 +356,7 @@ export class NoskeSearch {
               clearAutocomplete();
             }
           }
-        }, 250)
+        }, 250),
       );
     };
 
@@ -382,7 +382,7 @@ export class NoskeSearch {
           hits,
           pagination,
           config!,
-          stats!
+          stats!,
         );
         await this.createPagination(
           1,
@@ -391,7 +391,8 @@ export class NoskeSearch {
           pagination,
           searchInput.id,
           config!,
-          stats!
+          stats!,
+          searchQueryStats,
         );
         if (stats.customQueryStats) {
           const hitsContainer = `${hits.id}-init`;
@@ -402,7 +403,7 @@ export class NoskeSearch {
             userInput,
             getLines(statsLine),
             pagesize,
-            hitsContainer
+            hitsContainer,
           );
         }
       }
@@ -419,7 +420,7 @@ export class NoskeSearch {
             searchQuery(query);
             clearAutocomplete();
           }
-        }, 250)
+        }, 250),
       );
     };
 
@@ -429,7 +430,7 @@ export class NoskeSearch {
       if (query) {
         debug ? (queryType!.value = "simple") : (queryType!.value = "cql");
         const input = document.querySelector<HTMLInputElement>(
-          `input#${searchInput?.id}-input`
+          `input#${searchInput?.id}-input`,
         );
         // const query = url.searchParams.get("selectQueryValue")! === "word" ? this.normalizeQuery(oldQuery)
         //   : url.searchParams.get("selectQueryValue")! === "phrase" ? this.normalizeQuery(oldQuery)
@@ -462,7 +463,7 @@ export class NoskeSearch {
           hits,
           pagination,
           config!,
-          stats!
+          stats!,
         );
         await this.createPagination(
           1,
@@ -471,7 +472,8 @@ export class NoskeSearch {
           pagination,
           searchInput.id,
           config!,
-          stats!
+          stats!,
+          searchQueryStats,
         );
         if (stats.customQueryStats) {
           const hitsContainer = `${hits.id}-init`;
@@ -482,7 +484,7 @@ export class NoskeSearch {
             input!.value,
             getLines(statsLine),
             pagesize,
-            hitsContainer
+            hitsContainer,
           );
         }
       }
@@ -490,7 +492,7 @@ export class NoskeSearch {
 
     const searchQueryStats = async (
       userInput: string,
-      pagesize: number = 999999
+      pagesize: number = 999999,
     ): Promise<_concordance> => {
       if (userInput.length >= this.minQueryLength) {
         const line = await getCorpusStats(userInput, {
@@ -503,14 +505,14 @@ export class NoskeSearch {
           kwicleftctx: client.kwicleftctx || this.kwicleftctx,
           refs: client.refs || this.refs,
           pagesize: pagesize,
-          fromp: client.fromp || this.fromp,
+          fromp: 1, // always start from page 1 for stats
           selectQueryId: `${searchInput?.id}-select`,
         });
         if (debug && line !== null) console.log(line);
         return line;
       }
       throw new Error(
-        `Query length is less than minimum length of: ${this.minQueryLength}`
+        `Query length is less than minimum length of: ${this.minQueryLength}`,
       );
     };
 
@@ -519,12 +521,12 @@ export class NoskeSearch {
         "click",
         debounce(() => {
           const input = document.querySelector<HTMLInputElement>(
-            `input#${searchInput?.id}-input`
+            `input#${searchInput?.id}-input`,
           );
           const query = input!.value;
           searchQuery(query);
           clearAutocomplete();
-        }, 250)
+        }, 250),
       );
     };
 
@@ -552,7 +554,7 @@ export class NoskeSearch {
       throw new Error("main search div container is not defined");
     if (!id) throw new Error("search input id is not defined");
     const container = document.querySelector<HTMLDivElement>(
-      `#${this.container}`
+      `#${this.container}`,
     );
     container!.innerHTML = `<div id="${id}" class="${css?.div || this.div1css}">
         <select id="${`${id}-select`}"
@@ -574,7 +576,7 @@ export class NoskeSearch {
 
   private transformStats(options: Stats, stats: number, label: string): void {
     const statsContainer = document.querySelector<HTMLDivElement>(
-      `#${options.id}`
+      `#${options.id}`,
     );
     const html = `<div id="${options.id}-init" class="${options.css?.div}">
                     <label class="${options.css?.label}">${label} ${stats}</label>
@@ -588,10 +590,10 @@ export class NoskeSearch {
     hits: Hits,
     pagination: Pagination,
     config: Config,
-    statistics: Stats
+    statistics: Stats,
   ): Promise<void> {
     const hitsContainer = document.querySelector<HTMLDivElement>(
-      `#${hits.id}-init`
+      `#${hits.id}-init`,
     );
     hitsContainer!.innerHTML = "";
     if (line === "No results found") {
@@ -604,7 +606,7 @@ export class NoskeSearch {
       const client_attr = client.attrs?.split(",");
       const pages = Math.ceil(stats! / (client?.pagesize || this.pagesize));
       const pag = document.querySelector<HTMLDivElement>(
-        `#${pagination.id}-init`
+        `#${pagination.id}-init`,
       );
       pag!.innerHTML = `<select id="${`${pagination.id}-select`}"
           class="${pagination.css?.select || this.selectcss}">
@@ -620,7 +622,7 @@ export class NoskeSearch {
         config?.customUrlTransform,
         config?.customSynopticView,
         config?.customResponseHtml,
-        hits!
+        hits!,
       );
       if (stats) {
         this.transformStats(
@@ -632,7 +634,7 @@ export class NoskeSearch {
             },
           },
           stats,
-          statistics.label || this.statsLabelValue
+          statistics.label || this.statsLabelValue,
         );
       }
     }
@@ -645,16 +647,17 @@ export class NoskeSearch {
     pagination: Pagination,
     searchInputId: string,
     config: Config,
-    statistics: Stats
+    statistics: Stats,
+    searchQueryStats: any,
   ): Promise<void> {
     const paginationEvent = document.querySelector<HTMLSelectElement>(
-      `#${pagination.id}-select`
+      `#${pagination.id}-select`,
     );
     paginationEvent!.addEventListener("change", async (e) => {
       // @ts-ignore
       client.fromp = parseInt(e.target!.value);
       const query = document.querySelector<HTMLInputElement>(
-        `input#${searchInputId}-input`
+        `input#${searchInputId}-input`,
       )!.value;
       const line = await getCorpus(query, {
         corpname: client.corpname,
@@ -675,7 +678,7 @@ export class NoskeSearch {
         hits,
         pagination,
         config,
-        statistics
+        statistics,
       );
       await this.createPagination(
         // @ts-ignore
@@ -685,8 +688,21 @@ export class NoskeSearch {
         pagination,
         searchInputId,
         config,
-        statistics
+        statistics,
+        searchQueryStats,
       );
+      if (statistics.customQueryStats) {
+        const hitsContainer = `${hits.id}-init`;
+        const pagesize =
+          line && line !== "No results found" ? line.fullsize : 999999;
+        const statsLine = await searchQueryStats(query, pagesize);
+        statistics.customQueryStats(
+          query,
+          getLines(statsLine),
+          pagesize,
+          hitsContainer,
+        );
+      }
     });
     paginationEvent!.value = currentPage.toString();
   }
@@ -695,10 +711,10 @@ export class NoskeSearch {
     hitsId: string,
     paginationId: string,
     searchInputId: string,
-    statsId: string
+    statsId: string,
   ): void {
     const input = document.querySelector<HTMLInputElement>(
-      `input#${searchInputId}-input`
+      `input#${searchInputId}-input`,
     );
     input!.addEventListener("input", async (e) => {
       // @ts-ignore
@@ -707,7 +723,7 @@ export class NoskeSearch {
         const hits = document.querySelector<HTMLDivElement>(`#${hitsId}-init`);
         hits!.innerHTML = "";
         const pagination = document.querySelector<HTMLDivElement>(
-          `#${paginationId}-init`
+          `#${paginationId}-init`,
         );
         pagination!.innerHTML = "";
         document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
