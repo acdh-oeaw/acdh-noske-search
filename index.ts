@@ -337,12 +337,21 @@ export class NoskeSearch {
           if (init) {
             // @ts-ignore
             const query = e.target!.value;
-            const userInput: string = autoCompleteRegexType(query);
-
+            if (query.startsWith("[") === true) {
+              clearAutocomplete();
+              return;
+            }
             if (
-              query.length >= this.minQueryLength &&
-              query.startsWith("[") === false
+              query.startsWith("^") === true ||
+              query.startsWith(".*") === true ||
+              query.endsWith(".*") === true
             ) {
+              var userInput: string = query;
+            } else {
+              var userInput: string = autoCompleteRegexType(query);
+            }
+
+            if (query.length >= this.minQueryLength) {
               const allItems = await autocompleteWordlist(userInput);
               if (allItems !== undefined) {
                 itemsToHTML(
@@ -351,12 +360,14 @@ export class NoskeSearch {
                   autocompleteOptions || this.autocompleteOptions,
                 );
                 autocompleteFocus();
+              } else {
+                clearAutocomplete();
               }
             } else {
               clearAutocomplete();
             }
           }
-        }, 250),
+        }, 750),
       );
     };
 
@@ -409,20 +420,20 @@ export class NoskeSearch {
       }
     };
 
-    const searchEnter = (): void => {
-      input!.addEventListener(
-        "keydown",
-        debounce((e) => {
-          // @ts-ignore
-          if (e.key === "Enter") {
-            // @ts-ignore
-            const query = e.target!.value;
-            searchQuery(query);
-            clearAutocomplete();
-          }
-        }, 250),
-      );
-    };
+    // const searchEnter = (): void => {
+    //   searchButton!.addEventListener(
+    //     "keydown",
+    //     debounce((e) => {
+    //       // @ts-ignore
+    //       if (e.key === "Enter") {
+    //         // @ts-ignore
+    //         const query = e.target!.value;
+    //         searchQuery(query);
+    //         clearAutocomplete();
+    //       }
+    //     }, 250),
+    //   );
+    // };
 
     const onloadSearch = async (): Promise<void> => {
       const url = new URL(window.location.href);
@@ -532,7 +543,7 @@ export class NoskeSearch {
 
     onloadSearch();
     autocomplete();
-    searchEnter();
+    // searchEnter();
     searchClick();
   }
 
@@ -624,6 +635,9 @@ export class NoskeSearch {
         config?.customResponseHtml,
         hits!,
       );
+      document
+        .querySelector<HTMLDivElement>(`#${statistics.id}-init`)
+        ?.remove();
       if (stats) {
         this.transformStats(
           {
@@ -727,6 +741,7 @@ export class NoskeSearch {
         );
         pagination!.innerHTML = "";
         document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
+        console.log(`Cleared stats for ${statsId}`);
         window.history.pushState({}, "", `${window.location.pathname}`);
         document.getElementById("nokse-autocomplete")?.remove();
       }

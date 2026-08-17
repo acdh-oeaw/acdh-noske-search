@@ -1,36 +1,36 @@
 import "./style.css";
 import "../dist/index.d.ts";
-import { NoskeSearch } from "../index";
-import { loadContent } from "./lib.ts";
+import { NoskeSearch } from "../dist/index.js";
+// import { loadContent } from "./lib.ts";
 
-function checkRefs(
-  refs: Array<string>,
-  doc: boolean = false,
-): Array<string> | null {
-  if (doc) {
-    for (let ref of refs) {
-      if (ref.startsWith("doc.id")) {
-        return [ref.split("=")[1]];
-      }
-    }
-  } else {
-    var refIds = [];
-    for (let ref of refs) {
-      if (
-        ref === "" ||
-        ref === undefined ||
-        ref === null ||
-        ref.startsWith("doc")
-      ) {
-        continue;
-      } else {
-        refIds.push(ref);
-      }
-    }
-    return refIds;
-  }
-  return null;
-}
+// function checkRefs(
+//   refs: Array<string>,
+//   doc: boolean = false,
+// ): Array<string> | null {
+//   if (doc) {
+//     for (let ref of refs) {
+//       if (ref.startsWith("doc.id")) {
+//         return [ref.split("=")[1]];
+//       }
+//     }
+//   } else {
+//     var refIds = [];
+//     for (let ref of refs) {
+//       if (
+//         ref === "" ||
+//         ref === undefined ||
+//         ref === null ||
+//         ref.startsWith("doc")
+//       ) {
+//         continue;
+//       } else {
+//         refIds.push(ref);
+//       }
+//     }
+//     return refIds;
+//   }
+//   return null;
+// }
 
 const search = new NoskeSearch({
   container: "noske-search",
@@ -161,7 +161,6 @@ search.search({
       // function timeout
       // const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
       // await timeout(250); // wait for hits to be rendered
-      console.log(lines);
       let issues = {
         Korpus: 0,
         "Abraham-Mercks_Wienn": 0,
@@ -245,7 +244,6 @@ search.search({
           searchButton.click();
         }
       });
-      console.log(issues);
     },
     label: "Trefferstatistik",
     css: {
