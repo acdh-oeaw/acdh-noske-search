@@ -1,6 +1,6 @@
 import "./style.css";
 import "../dist/index.d.ts";
-import { NoskeSearch } from "../dist/index.js";
+import { NoskeSearch } from "../index";
 // import { loadContent } from "./lib.ts";
 
 // function checkRefs(
@@ -157,99 +157,98 @@ search.search({
   },
   stats: {
     id: "noske-stats",
-    customQueryStats: async (query, lines, pagesize, containerId) => {
-      // function timeout
-      // const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-      // await timeout(250); // wait for hits to be rendered
-      let issues = {
-        Korpus: 0,
-        "Abraham-Mercks_Wienn": 0,
-        "Abraham-Loesch_Wienn": 0,
-        "Abraham-Todten_Bruderschaft": 0,
-        "Abraham-Augustini_feuriges_Hertz": 0,
-        "Abraham-Todten_Capelle": 0,
-      };
-      for (const line of lines) {
-        var issueId = line.refs[1].split("doc.id=")[1];
-        issues["Korpus"]++;
-        issues[issueId]++;
-      }
-      const issuesBox = document.createElement("div");
-      issuesBox.classList.add("mt-4", "text-gray-600", "text-left");
-      issuesBox.innerHTML = `<img class="inline" src="/ihr_findet_padded.jpg" alt="Ihr findet" title="Ihr findet"/><h4 class="text-lg">Anzahl der Treffer:</h4>`;
-      issuesBox.innerHTML += `<ul class="pl-4">`;
-      for (const [key, value] of Object.entries(issues)) {
-        if (value === 0) continue;
-        let title = key
-          .replaceAll("_", " ")
-          .replace("Abraham-", "")
-          .replace("oe", "ö");
-        if (title.includes("Mercks Wien")) {
-          title = "Mercks Wienn";
-        } else if (title.includes("Todten Capelle")) {
-          title = "Todten-Capelle";
-        } else if (title.includes("Todten Bruderschaft")) {
-          title = "Grosse Todten Bruderschaft";
-        }
-        issuesBox.innerHTML += `<li class="text-red-600 cursor-pointer list-none" data-key="${key == "Korpus" ? ".*" : key}">${title} - ${value}</li>`;
-      }
-
-      const hitsBox =
-        document.getElementById(containerId!) ||
-        document.getElementById("hitsbox-init");
-      hitsBox!.prepend(issuesBox);
-
-      issuesBox.addEventListener("click", (e) => {
-        // @ts-ignore
-        const key = e.target!.dataset.key;
-        if (key) {
-          let searchInput = document.getElementById(
-            "noske-input-input",
-          ) as HTMLInputElement;
-          let searchSelect = document.getElementById(
-            "noske-input-select",
-          ) as HTMLSelectElement;
-          if (searchInput.value.includes("within")) {
-            if (searchSelect.value !== "cql") {
-              searchSelect.value = "cql";
-              let searchInputValue = searchInput.value.replace(
-                /(.+) within .+/g,
-                `"$1" within <doc id="${key}"/>`,
-              );
-              searchInput.value = searchInputValue;
-            } else {
-              searchInput.value = searchInput.value.replace(
-                /(.+) within .+/g,
-                `$1 within <doc id="${key}"/>`,
-              );
-            }
-          } else {
-            if (searchSelect.value !== "cql") {
-              searchSelect.value = "cql";
-              let searchInputValue = searchInput.value.replace(
-                /(.+)/g,
-                `"$1" within <doc id="${key}"/>`,
-              );
-              searchInput.value = searchInputValue;
-            } else {
-              searchInput.value = searchInput.value.replace(
-                /(.+)/g,
-                `$1 within <doc id="${key}"/>`,
-              );
-            }
-          }
-          const searchButton = document.getElementById(
-            "noske-search-button",
-          ) as HTMLButtonElement;
-          searchButton.click();
-        }
-      });
-    },
     label: "Trefferstatistik",
     css: {
       div: "p-2",
       label: "font-bold",
     },
+    // customQueryStats: async (query, lines, pagesize, containerId) => {
+    //   // function timeout
+    //   // const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    //   // await timeout(250); // wait for hits to be rendered
+    //   let issues = {
+    //     Korpus: 0,
+    //     "Abraham-Mercks_Wienn": 0,
+    //     "Abraham-Loesch_Wienn": 0,
+    //     "Abraham-Todten_Bruderschaft": 0,
+    //     "Abraham-Augustini_feuriges_Hertz": 0,
+    //     "Abraham-Todten_Capelle": 0,
+    //   };
+    //   for (const line of lines) {
+    //     var issueId = line.refs[1].split("doc.id=")[1];
+    //     issues["Korpus"]++;
+    //     issues[issueId]++;
+    //   }
+    //   const issuesBox = document.createElement("div");
+    //   issuesBox.classList.add("mt-4", "text-gray-600", "text-left");
+    //   issuesBox.innerHTML = `<img class="inline" src="/ihr_findet_padded.jpg" alt="Ihr findet" title="Ihr findet"/><h4 class="text-lg">Anzahl der Treffer:</h4>`;
+    //   issuesBox.innerHTML += `<ul class="pl-4">`;
+    //   for (const [key, value] of Object.entries(issues)) {
+    //     if (value === 0) continue;
+    //     let title = key
+    //       .replaceAll("_", " ")
+    //       .replace("Abraham-", "")
+    //       .replace("oe", "ö");
+    //     if (title.includes("Mercks Wien")) {
+    //       title = "Mercks Wienn";
+    //     } else if (title.includes("Todten Capelle")) {
+    //       title = "Todten-Capelle";
+    //     } else if (title.includes("Todten Bruderschaft")) {
+    //       title = "Grosse Todten Bruderschaft";
+    //     }
+    //     issuesBox.innerHTML += `<li class="text-red-600 cursor-pointer list-none" data-key="${key == "Korpus" ? ".*" : key}">${title} - ${value}</li>`;
+    //   }
+
+    //   const hitsBox =
+    //     document.getElementById(containerId!) ||
+    //     document.getElementById("hitsbox-init");
+    //   hitsBox!.prepend(issuesBox);
+
+    //   issuesBox.addEventListener("click", (e) => {
+    //     // @ts-ignore
+    //     const key = e.target!.dataset.key;
+    //     if (key) {
+    //       let searchInput = document.getElementById(
+    //         "noske-input-input",
+    //       ) as HTMLInputElement;
+    //       let searchSelect = document.getElementById(
+    //         "noske-input-select",
+    //       ) as HTMLSelectElement;
+    //       if (searchInput.value.includes("within")) {
+    //         if (searchSelect.value !== "cql") {
+    //           searchSelect.value = "cql";
+    //           let searchInputValue = searchInput.value.replace(
+    //             /(.+) within .+/g,
+    //             `"$1" within <doc id="${key}"/>`,
+    //           );
+    //           searchInput.value = searchInputValue;
+    //         } else {
+    //           searchInput.value = searchInput.value.replace(
+    //             /(.+) within .+/g,
+    //             `$1 within <doc id="${key}"/>`,
+    //           );
+    //         }
+    //       } else {
+    //         if (searchSelect.value !== "cql") {
+    //           searchSelect.value = "cql";
+    //           let searchInputValue = searchInput.value.replace(
+    //             /(.+)/g,
+    //             `"$1" within <doc id="${key}"/>`,
+    //           );
+    //           searchInput.value = searchInputValue;
+    //         } else {
+    //           searchInput.value = searchInput.value.replace(
+    //             /(.+)/g,
+    //             `$1 within <doc id="${key}"/>`,
+    //           );
+    //         }
+    //       }
+    //       const searchButton = document.getElementById(
+    //         "noske-search-button",
+    //       ) as HTMLButtonElement;
+    //       searchButton.click();
+    //     }
+    // });
   },
   autocompleteOptions: {
     id: "noske-autocomplete",

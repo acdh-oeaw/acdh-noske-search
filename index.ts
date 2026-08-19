@@ -420,20 +420,20 @@ export class NoskeSearch {
       }
     };
 
-    // const searchEnter = (): void => {
-    //   searchButton!.addEventListener(
-    //     "keydown",
-    //     debounce((e) => {
-    //       // @ts-ignore
-    //       if (e.key === "Enter") {
-    //         // @ts-ignore
-    //         const query = e.target!.value;
-    //         searchQuery(query);
-    //         clearAutocomplete();
-    //       }
-    //     }, 250),
-    //   );
-    // };
+    const searchEnter = (): void => {
+      searchButton!.addEventListener(
+        "keydown",
+        debounce((e) => {
+          // @ts-ignore
+          if (e.key === "Enter") {
+            // @ts-ignore
+            const query = e.target!.value;
+            searchQuery(query);
+            clearAutocomplete();
+          }
+        }, 250),
+      );
+    };
 
     const onloadSearch = async (): Promise<void> => {
       const url = new URL(window.location.href);
@@ -543,7 +543,7 @@ export class NoskeSearch {
 
     onloadSearch();
     autocomplete();
-    // searchEnter();
+    searchEnter();
     searchClick();
   }
 
@@ -607,6 +607,11 @@ export class NoskeSearch {
       `#${hits.id}-init`,
     );
     hitsContainer!.innerHTML = "";
+    document.querySelector<HTMLDivElement>(`#${statistics.id}-init`)?.remove();
+    const pag = document.querySelector<HTMLDivElement>(
+      `#${pagination.id}-init`,
+    );
+    pag!.innerHTML = "";
     if (line === "No results found") {
       hitsContainer!.innerHTML = config?.results || this.results;
     } else if (line.error) {
@@ -616,9 +621,6 @@ export class NoskeSearch {
       const stats = getStats(line);
       const client_attr = client.attrs?.split(",");
       const pages = Math.ceil(stats! / (client?.pagesize || this.pagesize));
-      const pag = document.querySelector<HTMLDivElement>(
-        `#${pagination.id}-init`,
-      );
       pag!.innerHTML = `<select id="${`${pagination.id}-select`}"
           class="${pagination.css?.select || this.selectcss}">
           ${Array.from({ length: pages }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
@@ -635,9 +637,6 @@ export class NoskeSearch {
         config?.customResponseHtml,
         hits!,
       );
-      document
-        .querySelector<HTMLDivElement>(`#${statistics.id}-init`)
-        ?.remove();
       if (stats) {
         this.transformStats(
           {
@@ -730,21 +729,26 @@ export class NoskeSearch {
     const input = document.querySelector<HTMLInputElement>(
       `input#${searchInputId}-input`,
     );
-    input!.addEventListener("input", async (e) => {
-      // @ts-ignore
-      const query = e.target!.value;
-      if (query.length === 0) {
-        const hits = document.querySelector<HTMLDivElement>(`#${hitsId}-init`);
-        hits!.innerHTML = "";
-        const pagination = document.querySelector<HTMLDivElement>(
-          `#${paginationId}-init`,
-        );
-        pagination!.innerHTML = "";
-        document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
-        console.log(`Cleared stats for ${statsId}`);
-        window.history.pushState({}, "", `${window.location.pathname}`);
-        document.getElementById("nokse-autocomplete")?.remove();
-      }
+    ["input", "change"].forEach((event) => {
+      input!.addEventListener(event, async (e) => {
+        // @ts-ignore
+        const query = e.target!.value;
+        if (query.length === 0) {
+          const hits = document.querySelector<HTMLDivElement>(
+            `#${hitsId}-init`,
+          );
+          hits!.innerHTML = "";
+          const pagination = document.querySelector<HTMLDivElement>(
+            `#${paginationId}-init`,
+          );
+          pagination!.innerHTML = "";
+          console.log(`Cleared results for ${hitsId} and ${paginationId}`);
+          document.querySelector<HTMLDivElement>(`#${statsId}-init`)?.remove();
+          console.log(`Cleared stats for ${statsId}`);
+          window.history.pushState({}, "", `${window.location.pathname}`);
+          document.getElementById("noske-autocomplete")?.remove();
+        }
+      });
     });
   }
 }
