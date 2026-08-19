@@ -136,7 +136,15 @@ export async function getCorpus(query: string, options: Options) {
     // @ts-ignore
   } else if (response.error) {
     // @ts-ignore
-    response.error = `${response.error} see documentation at <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">https://www.sketchengine.eu/documentation/corpus-querying/</a>`;
+    response.error = `<span class="text-red-500">Fehler! ${response.error}</span>
+                      <div class="d-block ml-4">
+                          <span> 
+                            <span>Für weitere Informationen siehe: <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">Dokumentation</a></span>
+                            <br/><br/>
+                          </span>
+                          <span>Fehlerbehebung:</span>
+                           <ul style="list-style: disc;margin:0 2rem;"><li>Überprüfen Sie den Abfragetyp: <ul style="list-style: disc;margin:0 2rem;"><li>"Einfach"</li><li>"Erweitert (CQL)"</li></ul></li><li>Ungültige Anfrage</li><li>Netzwerkfehler</li></ul>
+                        </div>`;
   }
   return response;
 }
@@ -165,7 +173,6 @@ export async function getCorpusStats(query: string, options: Options) {
     pagesize: options.pagesize,
     fromp: options.fromp,
   });
-  console.log(response);
   return response;
 }
 
@@ -473,10 +480,8 @@ export function responseToHTML(
           }
         }
         if (id) {
-          console.log(id);
           url.hash = id;
         } else {
-          console.log(hashId);
           url.hash = hashId;
         }
       }
