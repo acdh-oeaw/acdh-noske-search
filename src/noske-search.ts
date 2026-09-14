@@ -136,15 +136,24 @@ export async function getCorpus(query: string, options: Options) {
     // @ts-ignore
   } else if (response.error) {
     // @ts-ignore
-    response.error = `<span class="text-red-500">Fehler! ${response.error}</span>
-                      <div class="d-block ml-4">
-                          <span> 
-                            <span>Für weitere Informationen siehe: <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">Dokumentation</a></span>
-                            <br/><br/>
-                          </span>
-                          <span>Fehlerbehebung:</span>
-                           <ul style="list-style: disc;margin:0 2rem;"><li>Überprüfen Sie den Abfragetyp: <ul style="list-style: disc;margin:0 2rem;"><li>"Einfach"</li><li>"Erweitert (CQL)"</li></ul></li><li>Ungültige Anfrage</li><li>Netzwerkfehler</li></ul>
-                        </div>`;
+    response.error = `<span class="text-red-500 noske-error">Fehler! ${response.error}</span>
+                      <div class="d-block ml-4 noske-error">
+                        <span>Fehlerbehebung:</span>
+                        <ul class="noske-error" style="list-style: disc;margin:0 2rem;">
+                          <li>Überprüfen Sie den Abfragetyp: 
+                            <ul style="list-style: disc;margin:0 2rem;">
+                              <li>"Einfach"</li>
+                              <li>"Erweitert (CQL)"</li>
+                            </ul>
+                          </li>
+                          <li>Ungültige Abfrage</li>
+                          <li>Netzwerkfehler</li>
+                        </ul>
+                        <span class="noske-error"> 
+                          <span>Für weitere Informationen siehe: <a target="_blank" class="text-blue-500" href="https://www.sketchengine.eu/documentation/corpus-querying/">Dokumentation</a></span>
+                          <br/><br/>
+                        </span>
+                      </div>`;
   }
   return response;
 }

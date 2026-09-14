@@ -421,7 +421,7 @@ export class NoskeSearch {
     };
 
     const searchEnter = (): void => {
-      searchButton!.addEventListener(
+      input!.addEventListener(
         "keydown",
         debounce((e) => {
           // @ts-ignore
@@ -452,12 +452,7 @@ export class NoskeSearch {
           viewmode: url.searchParams.get("viewmode") as "kwic" | "sen",
           attrs: url.searchParams.get("attrs")!,
           format: url.searchParams.get("format") as
-            | "json"
-            | "xml"
-            | "csv"
-            | "tsv"
-            | "txt"
-            | "xls",
+            "json" | "xml" | "csv" | "tsv" | "txt" | "xls",
           structs: url.searchParams.get("structs")!,
           kwicrightctx: url.searchParams.get("kwicrightctx")!,
           kwicleftctx: url.searchParams.get("kwicleftctx")!,
